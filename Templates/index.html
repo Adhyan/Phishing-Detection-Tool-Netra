@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NETRA — Phishing Detection System</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+</head>
+<body>
+
+
+<div class="scanline-overlay"></div>
+
+
+<nav class="navbar" id="navbar">
+  <div class="nav-logo">
+    <span class="logo-eye">👁</span>
+    <span class="logo-text">NETRA</span>
+    <span class="logo-tag">v2.1</span>
+  </div>
+
+  <div class="nav-center">
+    <a href="#features" class="nav-link">Features</a>
+    <a href="#dashboard" class="nav-link">Dashboard</a>
+    <a href="#accuracy" class="nav-link">Accuracy</a>
+    <a href="#learning" class="nav-link">Learn</a>
+    <a href="#about" class="nav-link">About</a>
+  </div>
+
+  <div class="nav-right">
+    <button class="btn-login" id="openAuthModal">Login / Sign Up</button>
+  </div>
+</nav>
+
+<!-- AUTH MODAL -->
+<div class="modal-overlay" id="authModal">
+  <div class="modal-box">
+    <button class="modal-close" id="closeAuthModal">✕</button>
+    <div class="modal-tabs">
+      <button class="tab-btn active" data-tab="login">Login</button>
+      <button class="tab-btn" data-tab="signup">Sign Up</button>
+    </div>
+    <div class="tab-content active" id="login">
+      <h3>Welcome Back</h3>
+      <input type="email" placeholder="Email Address" class="modal-input"/>
+      <input type="password" placeholder="Password" class="modal-input"/>
+      <button class="modal-submit">Access NETRA</button>
+    </div>
+    <div class="tab-content" id="signup">
+      <h3>Create Account</h3>
+      <input type="text" placeholder="Full Name" class="modal-input"/>
+      <input type="email" placeholder="Email Address" class="modal-input"/>
+      <input type="password" placeholder="Create Password" class="modal-input"/>
+      <button class="modal-submit">Join NETRA</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================
+     HERO SECTION
+============================= -->
+<section class="hero" id="hero">
+  <div class="hero-grid-bg"></div>
+  <div class="hero-particles" id="particles"></div>
+
+  <div class="hero-content">
+    <div class="alert-badge pulse">⚠ THREAT DETECTION ACTIVE</div>
+
+    <h1 class="hero-title">
+      <span class="glitch" data-text="NETRA">NETRA</span>
+    </h1>
+    <p class="hero-subtitle">Network Eye for Threat Recognition &amp; Analysis</p>
+
+    <blockquote class="hero-quote">
+      <span class="quote-mark">"</span>
+      In a world where every click could be a trap — <strong>NETRA</strong> is your digital guardian eye that never sleeps, never blinks, never lies.
+      <span class="quote-mark">"</span>
+    </blockquote>
+
+    <!-- URL INPUT BLOCK -->
+    <div class="url-scanner-block">
+      <div class="scanner-label">🔍 SCAN URL FOR THREATS</div>
+      <div class="scanner-input-row">
+        <input type="text" class="url-input" id="urlInput" placeholder="https://enter-suspicious-url.com"/>
+        <button class="scan-btn" id="scanBtn">
+          <span class="scan-btn-text">SCAN NOW</span>
+          <span class="scan-btn-icon">▶</span>
+        </button>
+      </div>
+      <div class="scanner-result" id="scanResult"></div>
+      <div class="scanner-meta">
+        <span>✓ AI-Powered</span>
+        <span>✓ Real-time</span>
+        <span>✓ Explainable</span>
+        <span>✓ Free</span>
+      </div>
+    </div>
+
+    <!-- STAT BLOCKS -->
+    <div class="hero-stats">
+      <div class="stat-card">
+        <div class="stat-num" data-target="99.7">0</div>
+        <div class="stat-label">% Accuracy</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" data-target="2.4">0</div>
+        <div class="stat-label">M URLs Scanned</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" data-target="847">0</div>
+        <div class="stat-label">K Threats Blocked</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================
+     DASHBOARD / ACCURACY SECTION
+============================= -->
+<section class="dashboard-section" id="dashboard">
+  <!-- ALERT BANNER -->
+  <div class="alert-banner" id="alertBanner">
+    <div class="alert-banner-inner">
+      <span class="alert-icon">🚨</span>
+      <span class="alert-text">LIVE THREAT FEED: 3 new phishing domains detected in the last 10 minutes — <strong>bank-secure-alert.xyz</strong> | <strong>paypa1-login.net</strong> | <strong>amaz0n-verify.co</strong></span>
+      <span class="alert-icon">🚨</span>
+    </div>
+  </div>
+
+  <div class="section-header">
+    <span class="section-tag">LIVE DASHBOARD</span>
+    <h2 class="section-title">Threat Intelligence <span class="accent">Center</span></h2>
+  </div>
+
+  <div class="dashboard-grid">
+    <!-- Detection Gauge -->
+    <div class="dash-card wide">
+      <div class="dash-card-title">🎯 Detection Accuracy Over Time</div>
+      <div class="chart-container">
+        <canvas id="accuracyChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Threat breakdown -->
+    <div class="dash-card">
+      <div class="dash-card-title">⚡ Threat Categories</div>
+      <div class="threat-list">
+        <div class="threat-item">
+          <span>Phishing URLs</span>
+          <div class="threat-bar-wrap"><div class="threat-bar" style="--pct:87%;--clr:#ff3c3c"></div></div>
+          <span>87%</span>
+        </div>
+        <div class="threat-item">
+          <span>Pirated Sites</span>
+          <div class="threat-bar-wrap"><div class="threat-bar" style="--pct:65%;--clr:#ff8800"></div></div>
+          <span>65%</span>
+        </div>
+        <div class="threat-item">
+          <span>Malware Hosts</span>
+          <div class="threat-bar-wrap"><div class="threat-bar" style="--pct:43%;--clr:#ffcc00"></div></div>
+          <span>43%</span>
+        </div>
+        <div class="threat-item">
+          <span>Spam Domains</span>
+          <div class="threat-bar-wrap"><div class="threat-bar" style="--pct:31%;--clr:#00e5ff"></div></div>
+          <span>31%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Results -->
+    <div class="dash-card">
+      <div class="dash-card-title">📋 Recent Scans</div>
+      <div class="recent-list" id="recentList">
+        <div class="recent-item danger">
+          <span class="status-dot red"></span>
+          <span class="url-truncate">secure-bank-login.phish.co</span>
+          <span class="badge-danger">PHISHING</span>
+        </div>
+        <div class="recent-item safe">
+          <span class="status-dot green"></span>
+          <span class="url-truncate">github.com/user/repo</span>
+          <span class="badge-safe">SAFE</span>
+        </div>
+        <div class="recent-item warn">
+          <span class="status-dot yellow"></span>
+          <span class="url-truncate">free-movies-hd.xyz</span>
+          <span class="badge-warn">PIRATED</span>
+        </div>
+        <div class="recent-item danger">
+          <span class="status-dot red"></span>
+          <span class="url-truncate">paypal-secure-verify.ru</span>
+          <span class="badge-danger">PHISHING</span>
+        </div>
+        <div class="recent-item safe">
+          <span class="status-dot green"></span>
+          <span class="url-truncate">amazon.com/product/12345</span>
+          <span class="badge-safe">SAFE</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Donut chart card -->
+    <div class="dash-card center-content">
+      <div class="dash-card-title">📊 Result Distribution</div>
+      <div class="donut-wrap">
+        <canvas id="donutChart"></canvas>
+        <div class="donut-center-text">
+          <div class="donut-big">72%</div>
+          <div class="donut-small">Threats Caught</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================
+     VIDEO SIMULATION SECTION
+============================= -->
+<section class="simulation-section" id="learning">
+  <div class="sim-bg-anim"></div>
+
+  <div class="section-header">
+    <span class="section-tag">LEARN & PROTECT</span>
+    <h2 class="section-title">Phishing <span class="accent">Simulation</span> Lab</h2>
+    <p class="section-desc">Understand how attackers operate — so you never fall for their traps.</p>
+  </div>
+
+  <div class="sim-grid">
+    <div class="sim-video-box">
+      <div class="video-frame-border">
+        <div class="video-placeholder" id="videoPlaceholder">
+          <div class="video-scanline"></div>
+          <div class="video-content">
+            <div class="video-icon">▶</div>
+            <div class="video-title">PHISHING ATTACK SIMULATION</div>
+            <div class="video-sub">Watch how scammers steal your data in real-time</div>
+            <div class="video-steps-anim" id="videoSteps">
+              <div class="vstep active" data-step="1">🎣 Attacker crafts fake login page</div>
+              <div class="vstep" data-step="2">📧 Sends urgent email to victim</div>
+              <div class="vstep" data-step="3">🖱 Victim clicks malicious link</div>
+              <div class="vstep" data-step="4">🔑 Credentials harvested silently</div>
+              <div class="vstep" data-step="5">💀 Account compromised instantly</div>
+            </div>
+            <button class="play-sim-btn" id="playSimBtn">▶ PLAY SIMULATION</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sim-info">
+      <h3 class="sim-info-title">How Scammers Target You</h3>
+      <div class="sim-cards">
+        <div class="sim-info-card">
+          <div class="sim-icon">📧</div>
+          <div>
+            <strong>Email Phishing</strong>
+            <p>Fake emails mimicking banks, services, and government bodies to steal credentials.</p>
+          </div>
+        </div>
+        <div class="sim-info-card">
+          <div class="sim-icon">🌐</div>
+          <div>
+            <strong>Fake Websites</strong>
+            <p>Pixel-perfect clones of real websites with slightly altered URLs to deceive users.</p>
+          </div>
+        </div>
+        <div class="sim-info-card">
+          <div class="sim-icon">📱</div>
+          <div>
+            <strong>SMS Smishing</strong>
+            <p>Fraudulent text messages creating urgency to click malicious shortened links.</p>
+          </div>
+        </div>
+        <div class="sim-info-card">
+          <div class="sim-icon">🎭</div>
+          <div>
+            <strong>Social Engineering</strong>
+            <p>Psychological manipulation using fear, urgency, and authority to bypass your guard.</p>
+          </div>
+        </div>
+      </div>
+      <div class="sim-protect-tips">
+        <div class="protect-title">🛡 NETRA Protects You From All These</div>
+        <div class="protect-tip">✓ AI scans URL patterns before you click</div>
+        <div class="protect-tip">✓ Email header analysis detects spoofing</div>
+        <div class="protect-tip">✓ Explainable AI tells you exactly WHY it's dangerous</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================
+     FEATURES SECTION
+============================= -->
+<section class="features-section" id="features">
+  <div class="section-header">
+    <span class="section-tag">CAPABILITIES</span>
+    <h2 class="section-title">What <span class="accent">NETRA</span> Can Do</h2>
+    <p class="section-desc">A full-spectrum threat detection arsenal powered by explainable AI.</p>
+  </div>
+
+  <div class="features-grid">
+    <div class="feat-card" data-delay="0">
+      <div class="feat-icon-wrap">
+        <div class="feat-icon">🔍</div>
+      </div>
+      <h4>URL Scanner</h4>
+      <p>Deep inspection of URLs using machine learning to detect phishing patterns, suspicious domains, and malicious redirects in real time.</p>
+      <div class="feat-tag">Core Feature</div>
+    </div>
+
+    <div class="feat-card" data-delay="100">
+      <div class="feat-icon-wrap">
+        <div class="feat-icon">📧</div>
+      </div>
+      <h4>Email Checker</h4>
+      <p>Analyze email headers, sender reputation, SPF/DKIM records, and content patterns to expose spoofed and fraudulent messages.</p>
+      <div class="feat-tag">Core Feature</div>
+    </div>
+
+    <div class="feat-card highlight" data-delay="200">
+      <div class="feat-icon-wrap">
+        <div class="feat-icon">🧠</div>
+      </div>
+      <h4>Explainable AI</h4>
+      <p>NETRA doesn't just flag threats — it explains WHY. Every detection comes with a detailed breakdown of risk factors and threat indicators.</p>
+      <div class="feat-tag highlight-tag">AI-Powered</div>
+    </div>
+
+    <div class="feat-card" data-delay="300">
+      <div class="feat-icon-wrap">
+        <div class="feat-icon">🏴‍☠️</div>
+      </div>
+      <h4>Pirated Site Detection</h4>
+      <p>Identifies unauthorized content distribution platforms, illegal streaming sites, and copyright-infringing domains that may also host malware.</p>
+      <div class="feat-tag">New</div>
+    </div>
+
+    <div class="feat-card" data-delay="400">
+      <div class="feat-icon-wrap">
+        <div class="feat-icon">🎮</div>
+      </div>
+      <h4>Phishing Simulation Lab</h4>
+      <p>Interactive training environment where users can safely experience simulated phishing attacks to build awareness and resistance.</p>
+      <div class="feat-tag">Education</div>
+    </div>
+
+    <div class="feat-card" data-delay="500">
+      <div class="feat-icon-wrap">
+        <div class="feat-icon">📊</div>
+      </div>
+      <h4>Threat Dashboard</h4>
+      <p>Live visualization of detected threats, scan history, accuracy metrics, and threat intelligence feeds across categories.</p>
+      <div class="feat-tag">Analytics</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================
+     SIGNUP SECTION
+============================= -->
+<section class="signup-section" id="signup">
+  <div class="signup-bg"></div>
+  <div class="signup-content">
+    <div class="section-tag">JOIN THE NETWORK</div>
+    <h2 class="signup-title">Activate Your <span class="accent">NETRA</span> Shield</h2>
+    <p class="signup-desc">Join 50,000+ users who trust NETRA to guard their digital lives every day.</p>
+
+    <form class="signup-form" id="signupForm">
+      <div class="form-row">
+        <input type="text" placeholder="Full Name" class="form-input" required/>
+        <input type="email" placeholder="Email Address" class="form-input" required/>
+      </div>
+      <div class="form-row">
+        <input type="password" placeholder="Create Password" class="form-input" required/>
+        <input type="password" placeholder="Confirm Password" class="form-input" required/>
+      </div>
+      <div class="form-check">
+        <input type="checkbox" id="terms"/>
+        <label for="terms">I agree to the Terms of Service and Privacy Policy</label>
+      </div>
+      <button type="submit" class="signup-submit-btn">
+        <span>🛡 ACTIVATE NETRA PROTECTION</span>
+      </button>
+    </form>
+
+    <div class="signup-trust">
+      <span>🔒 256-bit encrypted</span>
+      <span>✓ No spam ever</span>
+      <span>✓ Free forever plan</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============================
+     ABOUT SECTION
+============================= -->
+<section class="about-section" id="about">
+  <div class="section-header">
+    <span class="section-tag">OUR MISSION</span>
+    <h2 class="section-title">About <span class="accent">NETRA</span></h2>
+  </div>
+
+  <div class="about-grid">
+    <div class="about-text">
+      <p>
+        <strong>NETRA</strong> (Network Eye for Threat Recognition &amp; Analysis) was born from a simple but urgent question: <em>Why do millions of people still fall for phishing attacks despite knowing they exist?</em>
+      </p>
+      <p>
+        Our team of cybersecurity researchers and AI engineers built NETRA to bridge the gap between technical threat intelligence and everyday user protection. We believe security should be <strong>accessible, explainable, and proactive</strong>.
+      </p>
+      <p>
+        NETRA uses a multi-layered approach combining heuristic analysis, machine learning models trained on millions of phishing samples, and real-time threat intelligence feeds to achieve industry-leading accuracy.
+      </p>
+      <div class="about-highlights">
+        <div class="about-hl">
+          <span class="hl-num">99.7%</span>
+          <span class="hl-label">Detection Rate</span>
+        </div>
+        <div class="about-hl">
+          <span class="hl-num">&lt;1s</span>
+          <span class="hl-label">Scan Speed</span>
+        </div>
+        <div class="about-hl">
+          <span class="hl-num">50K+</span>
+          <span class="hl-label">Active Users</span>
+        </div>
+        <div class="about-hl">
+          <span class="hl-num">24/7</span>
+          <span class="hl-label">Monitoring</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="about-visual">
+      <div class="eye-animation">
+        <div class="eye-outer">
+          <div class="eye-mid">
+            <div class="eye-inner">
+              <div class="eye-pupil">
+                <div class="eye-core"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="eye-scan-line"></div>
+      </div>
+      <p class="eye-caption">NETRA — The All-Seeing Eye of Cyber Safety</p>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-content">
+    <div class="footer-logo">
+      <span class="logo-eye">👁</span>
+      <span>NETRA</span>
+    </div>
+    <div class="footer-links">
+      <a href="#features">Features</a>
+      <a href="#dashboard">Dashboard</a>
+      <a href="#learning">Learn</a>
+      <a href="#about">About</a>
+      <a href="#signup">Sign Up</a>
+    </div>
+    <div class="footer-copy">
+      © 2025 NETRA — Network Eye for Threat Recognition &amp; Analysis. All rights reserved.
+    </div>
+  </div>
+</footer>
+
+<!-- Canvas for charts from CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
