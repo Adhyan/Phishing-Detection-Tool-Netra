@@ -8,7 +8,6 @@ netra/
 ├── app.py                    ← Flask backend (this file)
 ├── phishing_ensemble.pkl     ← Your trained ML model
 ├── requirements.txt
-├── reported_urls.jsonl       ← Auto-created when URLs are reported
 │
 ├── templates/
 │   ├── index.html            ← Your main frontend
