@@ -1,0 +1,1518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Secure Kitchen PRO v11</title>
+<!--
+  FIX 1 — Added 20+ new URLs per level so questions rarely repeat
+  FIX 2 — All ingredient buttons are same blue color (no red traps) — harder, more realistic
+  FIX 3 — Switched font to "Share Tech Mono" — same hacker theme but perfectly clear/readable
+  FIX 4 — Time increased at every level to compensate for harder blue-only mode
+-->
+<!-- Share Tech Mono = same monospace hacker feel but crystal clear to read -->
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#04070d;
+  --panel:rgba(0,220,255,0.05);
+  --border:rgba(0,220,255,0.14);
+  --cyan:#00dcff;
+  --green:#00ff88;
+  --red:#ff2040;
+  --orange:#ff8c00;
+  --yellow:#ffe040;
+  --purple:#cc44ff;
+  --dim:rgba(0,220,255,0.4);
+  --text:#cceeff;
+  --r:7px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{
+  min-height:100%;
+  /* FIX 3: Share Tech Mono — monospace, hacker feel, but very clear */
+  font-family:'Rajdhani',sans-serif;
+  background:var(--bg);color:var(--text);overflow-x:hidden;
+}
+
+/* ─── BG ─── */
+#bg-grid{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(rgba(0,220,255,.022) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,220,255,.022) 1px,transparent 1px);
+  background-size:48px 48px;}
+#bg-vignette{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse at center,transparent 35%,rgba(4,7,13,.95) 100%);}
+#scanlines{position:fixed;inset:0;z-index:9999;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.04) 3px,rgba(0,0,0,.04) 4px);}
+
+/* ─── LAYOUT ─── */
+#app{
+
+  width: 100%;
+  max-width:900px;
+  margin:0 auto;
+  padding:16px 10px 60px;
+  }
+
+/* ─── HEADER ─── */
+.hdr{text-align:center;margin-bottom:20px;animation:fadeDown .7s ease both;}
+.hdr-title{
+  font-family:'Share Tech Mono',monospace;
+  font-size:clamp(26px,5.5vw,46px);
+  color:var(--cyan);
+  text-shadow:0 0 18px var(--cyan),0 0 50px rgba(0,220,255,.2);
+  letter-spacing:3px;animation:flicker 7s infinite;
+}
+.hdr-sub{font-size:11px;letter-spacing:6px;color:var(--dim);text-transform:uppercase;margin-top:4px;font-family:'Share Tech Mono',monospace;}
+.hdr-tagline{font-size:13px;color:rgba(0,220,255,.5);margin-top:6px;letter-spacing:1px;font-weight:500;}
+
+.top-nav{display:flex;justify-content:center;gap:8px;margin-top:12px;flex-wrap:wrap;}
+.nav-btn{
+  padding:6px 16px;border-radius:var(--r);border:1px solid var(--border);background:var(--panel);
+  color:var(--dim);font-family:'Share Tech Mono',monospace;font-size:13px;
+  cursor:pointer;transition:all .2s;letter-spacing:1px;
+}
+.nav-btn:hover,.nav-btn.active{border-color:var(--cyan);color:var(--cyan);background:rgba(0,220,255,.08);}
+.nav-btn.daily{border-color:rgba(255,224,64,.3);color:var(--yellow);}
+.nav-btn.daily:hover{background:rgba(255,224,64,.08);border-color:var(--yellow);}
+.nav-btn.sound-off{opacity:.4;}
+
+@keyframes flicker{0%,93%,100%{opacity:1;}94%{opacity:.6;}96%{opacity:1;}97%{opacity:.4;}98%{opacity:1;}}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-14px);}to{opacity:1;transform:none;}}
+
+/* ─── UNIFIED MODE — no toggle needed ─── */
+
+/* ─── STATS ─── */
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-bottom:12px;}
+.stat{background:var(--panel);border:1px solid var(--border);border-radius:var(--r);padding:8px 4px;text-align:center;}
+.stat-lbl{font-size:9px;letter-spacing:2px;color:var(--dim);text-transform:uppercase;font-weight:600;}
+.stat-val{
+  font-family:'Share Tech Mono',monospace;
+  font-size:24px;line-height:1.15;color:var(--cyan);
+  text-shadow:0 0 8px var(--cyan);margin-top:2px;transition:color .3s,text-shadow .3s;
+}
+.stat-val.g{color:var(--green);text-shadow:0 0 8px var(--green);}
+.stat-val.r{color:var(--red);text-shadow:0 0 8px var(--red);}
+.stat-val.o{color:var(--orange);text-shadow:0 0 8px var(--orange);}
+.stat-val.p{color:var(--purple);text-shadow:0 0 8px var(--purple);}
+
+/* ─── LEVEL BADGE ─── */
+.lvl-row{text-align:center;margin-bottom:10px;}
+.lvl-badge{
+  font-family:'Share Tech Mono',monospace;font-size:13px;letter-spacing:4px;
+  padding:6px 28px;border-radius:20px;display:inline-block;transition:all .4s;
+}
+.lv1{background:rgba(0,255,136,.08);border:1px solid rgba(0,255,136,.35);color:var(--green);}
+.lv2{background:rgba(0,220,255,.08);border:1px solid rgba(0,220,255,.35);color:var(--cyan);}
+.lv3{background:rgba(255,140,0,.08);border:1px solid rgba(255,140,0,.35);color:var(--orange);}
+.lv4{background:rgba(255,32,64,.09);border:1px solid rgba(255,32,64,.38);color:var(--red);animation:pRed 1.3s infinite;}
+.lv5{background:rgba(255,32,64,.18);border:2px solid var(--red);color:var(--red);animation:pRed .65s infinite;}
+.lv6{background:rgba(200,40,255,.16);border:2px solid var(--purple);color:#e088ff;animation:pPurple .5s infinite;}
+@keyframes pRed{0%,100%{box-shadow:0 0 8px var(--red);}50%{box-shadow:0 0 24px var(--red),0 0 48px rgba(255,32,64,.25);}}
+@keyframes pPurple{0%,100%{box-shadow:0 0 10px var(--purple);}50%{box-shadow:0 0 30px var(--purple),0 0 60px rgba(200,40,255,.35);}}
+
+/* ─── BARS ─── */
+.progress-section{margin-bottom:11px;}
+.bar-hdr{display:flex;justify-content:space-between;font-size:11px;color:var(--dim);letter-spacing:1px;margin-bottom:4px;font-weight:600;}
+.bar-track{background:rgba(255,255,255,.05);border-radius:4px;height:6px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:4px;transition:width .5s ease;}
+.xp-fill{background:linear-gradient(90deg,var(--cyan),var(--green));}
+.timer-fill{background:var(--green);transition:width 1s linear,background .35s;}
+
+/* ─── Q INFO ─── */
+.q-info{display:flex;justify-content:space-between;align-items:center;
+  font-size:12px;letter-spacing:1px;color:var(--dim);margin-bottom:10px;font-weight:600;}
+.q-info span{font-family:'Share Tech Mono',monospace;font-size:13px;}
+
+/* ─── PANELS ─── */
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:var(--r);
+  padding:14px 16px;margin-bottom:10px;position:relative;overflow:hidden;}
+.panel::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--cyan),transparent);opacity:.4;}
+.panel-lbl{
+  font-size:10px;letter-spacing:3px;color:var(--dim);text-transform:uppercase;margin-bottom:8px;
+  display:flex;align-items:center;gap:8px;font-weight:700;font-family:'Share Tech Mono',monospace;
+}
+/* FIX 3: order text — clear, easy to read */
+.order-txt{
+  font-size:19px;color:#ffffff;line-height:1.55;font-weight:700;
+  font-family:'Rajdhani',sans-serif;letter-spacing:.3px;
+}
+.daily-tag{font-size:9px;background:rgba(255,224,64,.12);border:1px solid rgba(255,224,64,.28);
+  color:var(--yellow);padding:2px 8px;border-radius:10px;letter-spacing:2px;margin-left:auto;}
+
+/* ─── URL BOX ─── */
+.url-box{
+  font-family:'Share Tech Mono',monospace;
+  font-size:20px;color:var(--cyan);min-height:32px;
+  word-break:break-all;letter-spacing:.5px;transition:color .2s;line-height:1.5;
+}
+.url-box.wrong{color:var(--red);}
+.url-box.correct{color:var(--green);}
+.cur{display:inline-block;width:2px;height:18px;background:var(--cyan);margin-left:2px;
+  vertical-align:middle;animation:blink .85s step-end infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0;}}
+
+/* ─── FIX 2: ALL INGREDIENTS SAME BLUE — no red traps visible ─── */
+/* All buttons look identical — user must figure it out themselves */
+.ing-grid{display:flex;flex-wrap:wrap;gap:8px;}
+.ing{
+  padding:10px 16px;border-radius:6px;
+  border:1px solid rgba(0,220,255,.25);
+  background:rgba(0,220,255,.06);
+  color:#a8d8f0;
+  font-family:'Share Tech Mono',monospace;
+  font-size:15px;  /* bigger — easier to read */
+  cursor:pointer;transition:all .15s;user-select:none;
+  -webkit-tap-highlight-color:transparent;
+  min-height:46px;display:flex;align-items:center;
+  letter-spacing:.3px;
+}
+/* hover — slightly brighter blue, no red ever */
+.ing:hover{
+  background:rgba(0,220,255,.16);
+  border-color:var(--cyan);
+  color:var(--cyan);
+  box-shadow:0 0 10px rgba(0,220,255,.18);
+  transform:translateY(-2px);
+}
+.ing:active{transform:scale(.95);}
+/* selected state — bright cyan */
+.ing.selected{
+  border-color:var(--cyan);
+  background:rgba(0,220,255,.18);
+  color:var(--cyan);
+  box-shadow:0 0 8px rgba(0,220,255,.2);
+}
+/* used/disabled — dimmed but still blue */
+.ing.used{
+  opacity:.25;cursor:not-allowed;
+  transform:none!important;box-shadow:none!important;pointer-events:none;
+}
+/* NOTE: .trap class is still assigned in JS for logic,
+   but we intentionally give it the SAME style as .ing
+   so the player cannot visually distinguish traps */
+.ing.trap{
+  border-color:rgba(0,220,255,.25);
+  background:rgba(0,220,255,.06);
+  color:#a8d8f0;
+}
+.ing.trap:hover{
+  background:rgba(0,220,255,.16);
+  border-color:var(--cyan);
+  color:var(--cyan);
+  box-shadow:0 0 10px rgba(0,220,255,.18);
+}
+
+/* FIX 2: hide the ⚠ TRAPS badge since all look same */
+#trap-badge{display:none !important;}
+
+/* ─── UNIFIED INPUT ROW (below ingredients, syncs with buttons) ─── */
+.unified-input-wrap{
+  margin-top:12px;
+}
+.unified-input-row{
+  display:flex;align-items:center;
+  background:rgba(0,0,0,.5);border:1px solid rgba(0,220,255,.28);
+  border-radius:var(--r);padding:10px 14px;
+  transition:border-color .2s,box-shadow .2s;
+}
+.unified-input-row:focus-within{
+  border-color:var(--cyan);box-shadow:0 0 14px rgba(0,220,255,.18);
+}
+.unified-input-row.u-ok{
+  border-color:var(--green);box-shadow:0 0 14px rgba(0,255,136,.2);
+}
+.unified-input-row.u-err{
+  border-color:var(--red);box-shadow:0 0 14px rgba(255,32,64,.2);
+  animation:shake .4s ease;
+}
+.u-prompt{
+  font-family:'Share Tech Mono',monospace;font-size:18px;
+  color:var(--cyan);margin-right:8px;user-select:none;flex-shrink:0;opacity:.5;
+}
+#unified-input{
+  flex:1;background:transparent;border:none;outline:none;
+  font-family:'Share Tech Mono',monospace;font-size:17px;
+  color:var(--cyan);letter-spacing:.5px;caret-color:var(--green);
+}
+#unified-input::placeholder{color:rgba(0,220,255,.2);font-size:15px;}
+.u-live{
+  font-family:'Share Tech Mono',monospace;font-size:13px;
+  margin-top:5px;min-height:16px;
+}
+.u-live-ok{color:var(--green);}
+.u-live-err{color:var(--red);}
+.u-live-partial{color:var(--yellow);}
+.u-kbd{
+  font-size:11px;color:var(--dim);margin-top:5px;letter-spacing:.5px;font-weight:600;
+  display:flex;gap:12px;flex-wrap:wrap;
+}
+.kbd{
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);
+  border-radius:3px;padding:1px 7px;font-size:11px;
+  font-family:'Share Tech Mono',monospace;
+}
+  font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--purple);
+  letter-spacing:2px;margin-bottom:8px;
+}
+.terminal-input-row{
+  display:flex;align-items:center;
+  background:rgba(0,0,0,.5);border:1px solid rgba(204,68,255,.3);
+  border-radius:var(--r);padding:10px 14px;
+  transition:border-color .2s,box-shadow .2s;
+}
+.terminal-input-row:focus-within{border-color:var(--purple);box-shadow:0 0 14px rgba(204,68,255,.18);}
+.terminal-input-row.t-ok{border-color:var(--green);box-shadow:0 0 14px rgba(0,255,136,.18);}
+.terminal-input-row.t-err{border-color:var(--red);box-shadow:0 0 14px rgba(255,32,64,.18);animation:shake .4s ease;}
+.t-prompt-char{
+  font-family:'Share Tech Mono',monospace;font-size:20px;color:var(--purple);
+  margin-right:8px;user-select:none;flex-shrink:0;
+}
+#terminal-input{
+  flex:1;background:transparent;border:none;outline:none;
+  font-family:'Share Tech Mono',monospace;font-size:18px;color:var(--cyan);
+  letter-spacing:.5px;caret-color:var(--purple);
+}
+#terminal-input::placeholder{color:rgba(0,220,255,.2);}
+.t-live-indicator{font-family:'Share Tech Mono',monospace;font-size:13px;margin-top:6px;min-height:18px;}
+.t-live-ok{color:var(--green);}
+.t-live-err{color:var(--red);}
+.t-live-partial{color:var(--yellow);}
+.kbd-hint{font-size:12px;color:var(--dim);margin-top:8px;text-align:center;font-weight:600;}
+.kbd{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);
+  border-radius:3px;padding:1px 7px;font-size:11px;font-family:'Share Tech Mono',monospace;}
+
+/* ─── DIFF ─── */
+.diff-box{margin-top:10px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.07);
+  border-radius:var(--r);padding:12px 14px;display:none;}
+.diff-box.on{display:block;}
+.diff-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:6px;flex-wrap:wrap;}
+.diff-label{font-size:11px;letter-spacing:1px;color:var(--dim);min-width:65px;padding-top:2px;font-weight:700;}
+.diff-chars{font-family:'Share Tech Mono',monospace;font-size:16px;word-break:break-all;line-height:1.6;}
+.dc-ok{color:var(--green);}
+.dc-err{color:var(--red);text-decoration:underline;text-underline-offset:3px;}
+.dc-missing{color:var(--orange);background:rgba(255,140,0,.14);border-radius:2px;padding:0 2px;}
+.section-breakdown{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+.sb-item{flex:1;min-width:85px;padding:8px 10px;border-radius:var(--r);text-align:center;border:1px solid;}
+.sb-item.ok{background:rgba(0,255,136,.07);border-color:rgba(0,255,136,.28);}
+.sb-item.err{background:rgba(255,32,64,.07);border-color:rgba(255,32,64,.28);}
+.sb-icon{font-size:15px;}
+.sb-label{font-size:9px;letter-spacing:2px;color:var(--dim);text-transform:uppercase;margin-top:2px;font-weight:700;}
+.sb-val{font-family:'Share Tech Mono',monospace;font-size:12px;margin-top:2px;word-break:break-all;}
+.sb-item.ok .sb-val{color:var(--green);}
+.sb-item.err .sb-val{color:var(--red);}
+
+/* ─── FEEDBACK ─── */
+.feedback{border-radius:var(--r);padding:13px 16px;margin-bottom:10px;border-left:3px solid;display:none;}
+.feedback.ok{background:rgba(0,255,136,.05);border-color:var(--green);display:block;}
+.feedback.bad{background:rgba(255,32,64,.06);border-color:var(--red);display:block;}
+.fb-title{font-family:'Share Tech Mono',monospace;font-size:17px;margin-bottom:4px;letter-spacing:.5px;}
+.fb-tip{font-size:14px;line-height:1.7;opacity:.88;font-weight:500;}
+.fb-correct{font-family:'Share Tech Mono',monospace;font-size:14px;color:var(--green);margin-top:6px;opacity:.9;}
+
+/* ─── HINT ─── */
+.hint-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
+.btn-hint{
+  padding:7px 16px;border-radius:var(--r);border:1px solid rgba(255,224,64,.28);
+  background:rgba(255,224,64,.06);color:var(--yellow);
+  font-family:'Share Tech Mono',monospace;font-size:14px;
+  cursor:pointer;transition:all .2s;white-space:nowrap;
+}
+.btn-hint:hover{background:rgba(255,224,64,.14);box-shadow:0 0 10px rgba(255,224,64,.18);}
+.btn-hint:disabled{opacity:.28;cursor:not-allowed;}
+.hint-txt{font-size:13px;color:var(--yellow);opacity:.9;display:none;flex:1;font-weight:600;font-family:'Share Tech Mono',monospace;}
+.hint-txt.on{display:block;}
+
+/* ─── ACTIONS ─── */
+.actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
+.btn-serve{
+  flex:2;min-width:140px;padding:14px;border-radius:var(--r);
+  border:1px solid var(--green);background:rgba(0,255,136,.08);color:var(--green);
+  font-family:'Share Tech Mono',monospace;font-size:18px;letter-spacing:3px;
+  cursor:pointer;transition:all .2s;min-height:50px;
+}
+.btn-serve:hover:not(:disabled){background:rgba(0,255,136,.17);box-shadow:0 0 20px rgba(0,255,136,.25);transform:translateY(-1px);}
+.btn-serve:disabled{opacity:.32;cursor:not-allowed;}
+.btn-serve.terminal-serve{border-color:var(--purple);background:rgba(204,68,255,.07);color:var(--purple);}
+.btn-serve.terminal-serve:hover:not(:disabled){background:rgba(204,68,255,.16);box-shadow:0 0 20px rgba(204,68,255,.25);}
+.btn-undo{
+  flex:1;min-width:80px;padding:14px;border-radius:var(--r);
+  border:1px solid rgba(0,220,255,.22);background:rgba(0,220,255,.05);color:var(--cyan);
+  font-family:'Share Tech Mono',monospace;font-size:14px;
+  cursor:pointer;transition:all .2s;min-height:50px;
+}
+.btn-undo:hover{background:rgba(0,220,255,.12);box-shadow:0 0 10px rgba(0,220,255,.16);}
+.btn-reset{
+  flex:1;min-width:80px;padding:14px;border-radius:var(--r);
+  border:1px solid rgba(255,140,0,.28);background:rgba(255,140,0,.06);color:var(--orange);
+  font-family:'Share Tech Mono',monospace;font-size:14px;
+  cursor:pointer;transition:all .2s;min-height:50px;
+}
+.btn-reset:hover{background:rgba(255,140,0,.14);box-shadow:0 0 10px rgba(255,140,0,.18);}
+
+/* ─── COMBO ─── */
+#combo{position:fixed;top:40%;left:50%;transform:translate(-50%,-50%);
+  font-family:'Share Tech Mono',monospace;font-size:44px;pointer-events:none;z-index:9998;
+  opacity:0;color:var(--yellow);text-shadow:0 0 28px var(--yellow);}
+@keyframes comboPop{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.3);}
+  22%{opacity:1;transform:translate(-50%,-50%) scale(1.3);}
+  65%{opacity:1;transform:translate(-50%,-50%) scale(1);}
+  100%{opacity:0;transform:translate(-50%,-72%) scale(.88);}
+}
+.combo-pop{animation:comboPop 1.4s ease forwards;}
+
+/* ─── LEVEL UP BANNER ─── */
+#lvlup{position:fixed;top:0;left:0;right:0;z-index:9997;
+  background:linear-gradient(90deg,transparent,rgba(0,220,255,.09),transparent);
+  border-bottom:1px solid rgba(0,220,255,.25);padding:13px;text-align:center;
+  font-family:'Share Tech Mono',monospace;font-size:18px;color:var(--cyan);letter-spacing:5px;
+  transform:translateY(-100%);transition:transform .4s ease;}
+#lvlup.show{transform:translateY(0);}
+
+/* ─── DAILY BAR ─── */
+.daily-mode-bar{background:rgba(255,224,64,.05);border:1px solid rgba(255,224,64,.22);
+  border-radius:var(--r);padding:8px 14px;margin-bottom:10px;
+  display:none;align-items:center;justify-content:space-between;gap:10px;}
+.daily-mode-bar.on{display:flex;}
+.dm-label{font-size:11px;letter-spacing:2px;color:var(--yellow);text-transform:uppercase;font-weight:700;}
+.dm-info{font-family:'Share Tech Mono',monospace;font-size:15px;color:var(--yellow);}
+
+/* ─── OVERLAY ─── */
+#overlay{position:fixed;inset:0;background:rgba(4,7,13,.97);z-index:10000;display:none;
+  align-items:flex-start;justify-content:center;overflow-y:auto;padding:30px 16px 60px;}
+#overlay.on{display:flex;}
+.ov-inner{width:100%;max-width:600px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;}
+.ov-title{font-family:'Share Tech Mono',monospace;font-size:clamp(34px,7vw,58px);letter-spacing:3px;}
+.ov-title.red{color:var(--red);text-shadow:0 0 24px var(--red);}
+.ov-sub{font-size:12px;letter-spacing:3px;color:var(--dim);font-weight:600;}
+.ov-score{font-family:'Share Tech Mono',monospace;font-size:58px;color:var(--cyan);text-shadow:0 0 20px var(--cyan);}
+.ov-lbl{font-size:11px;letter-spacing:3px;color:var(--dim);font-weight:700;}
+.ov-rating{font-family:'Share Tech Mono',monospace;font-size:20px;letter-spacing:3px;margin:4px 0;}
+.ov-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%;margin:8px 0;}
+.ov-stat{background:var(--panel);border:1px solid var(--border);border-radius:var(--r);padding:10px 8px;text-align:center;}
+.ov-stat-v{font-family:'Share Tech Mono',monospace;font-size:26px;color:var(--cyan);}
+.ov-stat-l{font-size:10px;letter-spacing:1px;color:var(--dim);font-weight:700;}
+.ov-section-title{font-size:11px;letter-spacing:3px;color:var(--dim);text-transform:uppercase;
+  margin-top:10px;align-self:flex-start;padding-left:2px;font-weight:700;}
+.wrong-list{width:100%;display:flex;flex-direction:column;gap:6px;margin-bottom:10px;}
+.wrong-item{background:rgba(255,32,64,.05);border:1px solid rgba(255,32,64,.18);
+  border-radius:var(--r);padding:10px 14px;text-align:left;}
+.wi-q{font-size:14px;color:var(--text);margin-bottom:4px;font-weight:600;}
+.wi-yours{font-family:'Share Tech Mono',monospace;font-size:13px;color:var(--red);}
+.wi-correct{font-family:'Share Tech Mono',monospace;font-size:13px;color:var(--green);}
+.wi-tip{font-size:12px;color:var(--dim);margin-top:4px;line-height:1.6;font-weight:500;}
+.lb-list{width:100%;display:flex;flex-direction:column;gap:5px;margin-bottom:10px;}
+.lb-row{
+  display:grid;grid-template-columns:36px 1fr 52px;
+  align-items:center;gap:10px;
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:var(--r);padding:8px 14px;
+}
+.lb-rank{font-family:'Share Tech Mono',monospace;font-size:18px;color:var(--dim);}
+.lb-rank.gold{color:var(--yellow);text-shadow:0 0 8px var(--yellow);}
+.lb-rank.silver{color:#c0d0e0;}.lb-rank.bronze{color:var(--orange);}
+.lb-info{min-width:0;}
+.lb-score{font-family:'Share Tech Mono',monospace;font-size:20px;color:var(--cyan);}
+.lb-meta{font-size:11px;color:var(--dim);letter-spacing:.5px;font-weight:600;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.lb-badge-slot{width:52px;display:flex;align-items:center;justify-content:center;}
+.lb-new{font-size:10px;padding:2px 6px;border-radius:8px;white-space:nowrap;
+  background:rgba(0,255,136,.14);border:1px solid rgba(0,255,136,.28);color:var(--green);}
+.ov-btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:6px;}
+.btn-restart{
+  padding:13px 36px;border-radius:var(--r);border:1px solid var(--cyan);
+  background:rgba(0,220,255,.08);color:var(--cyan);
+  font-family:'Share Tech Mono',monospace;font-size:17px;letter-spacing:2px;
+  cursor:pointer;transition:all .2s;min-height:50px;
+}
+.home-btn-wrap{
+  margin-top:14px;
+  width:100%;
+}
+.btn-home{
+  width:100%;
+  padding:16px;
+  border-radius: 8px;
+  border: 1px solid var(--cyan);
+  background: rgba(0,220,255,.08);
+  color: var(--cyan);
+  font-family: 'Share Tech Mono',monospace;
+  font-size: 16px;
+  letter-spacing:2px;
+  cursor: pointer;
+  transition: all .2s;
+}
+.btn-home:hover{
+  background: rgba(0,220,255,.18);
+  box-shadow: 0 0 20px rgba(0,220,255,.25);
+  transform:translateY(-2px);
+}
+.btn-restart:hover{background:rgba(0,220,255,.18);box-shadow:0 0 24px rgba(0,220,255,.25);}
+.btn-daily-ov{
+  padding:13px 36px;border-radius:var(--r);border:1px solid rgba(255,224,64,.32);
+  background:rgba(255,224,64,.06);color:var(--yellow);
+  font-family:'Share Tech Mono',monospace;font-size:17px;letter-spacing:2px;
+  cursor:pointer;transition:all .2s;min-height:50px;
+}
+.btn-daily-ov:hover{background:rgba(255,224,64,.14);box-shadow:0 0 18px rgba(255,224,64,.18);}
+
+/* ─── ANIMATIONS ─── */
+@keyframes shake{0%,100%{transform:translateX(0);}20%{transform:translateX(-7px);}
+  40%{transform:translateX(7px);}60%{transform:translateX(-4px);}80%{transform:translateX(4px);}}
+.shake{animation:shake .4s ease;}
+@keyframes flashGreen{0%,100%{box-shadow:none;}50%{box-shadow:0 0 40px rgba(0,255,136,.35),inset 0 0 18px rgba(0,255,136,.06);}}
+.flash-ok{animation:flashGreen .55s ease;}
+@keyframes glitch{0%,87%,100%{text-shadow:0 0 10px var(--red);}88%{text-shadow:-3px 0 var(--cyan),3px 0 var(--orange);}
+  90%{text-shadow:3px 0 var(--cyan),-3px 0 var(--orange);}92%{text-shadow:0 0 10px var(--red);}}
+.glitch-anim{animation:glitch 2.6s infinite;}
+@keyframes nightmareGlitch{0%,82%,100%{text-shadow:0 0 12px var(--purple);}
+  83%{text-shadow:-4px 0 var(--cyan),4px 0 var(--red);}85%{text-shadow:4px 0 var(--cyan),-4px 0 var(--red);}
+  87%{text-shadow:0 0 18px var(--purple),0 0 40px rgba(200,40,255,.4);}}
+.nightmare-anim{animation:nightmareGlitch 1.9s infinite;}
+
+@media(max-width:500px){
+  .stats{grid-template-columns:repeat(3,1fr);}
+  .ov-grid{grid-template-columns:repeat(2,1fr);}
+  .ing{font-size:13px;padding:8px 10px;}
+  .mode-btn{font-size:11px;padding:6px 12px;}
+}
+</style>
+</head>
+<body>
+<div id="bg-grid"></div>
+<div id="bg-vignette"></div>
+<div id="scanlines"></div>
+<div id="lvlup"></div>
+<div id="combo"></div>
+
+<!-- GAME OVER OVERLAY -->
+<div id="overlay">
+  <div class="ov-inner">
+    <div class="ov-title red" id="ov-title">GAME OVER</div>
+    <div class="ov-sub" id="ov-sub">ALL LIVES LOST — SYSTEM BREACHED</div>
+    <div class="ov-score" id="ov-score">0</div>
+    <div class="ov-lbl">FINAL SCORE</div>
+    <div class="ov-rating" id="ov-rating"></div>
+    <div class="ov-grid">
+      <div class="ov-stat"><div class="ov-stat-v" id="ov-q">0</div><div class="ov-stat-l">ANSWERED</div></div>
+      <div class="ov-stat"><div class="ov-stat-v" id="ov-acc">0%</div><div class="ov-stat-l">ACCURACY</div></div>
+      <div class="ov-stat"><div class="ov-stat-v" id="ov-best">0</div><div class="ov-stat-l">BEST STREAK</div></div>
+      <div class="ov-stat"><div class="ov-stat-v" id="ov-lv">1</div><div class="ov-stat-l">MAX LEVEL</div></div>
+      <div class="ov-stat"><div class="ov-stat-v" id="ov-time">0s</div><div class="ov-stat-l">AVG TIME</div></div>
+      <div class="ov-stat"><div class="ov-stat-v" id="ov-combo">0</div><div class="ov-stat-l">MAX COMBO</div></div>
+    </div>
+    <div class="ov-section-title">🏆 Leaderboard</div>
+    <div class="lb-list" id="lb-list"></div>
+    <div class="ov-section-title" id="wr-title" style="display:none">❌ Mistakes Review</div>
+    <div class="wrong-list" id="wrong-list"></div>
+    <div class="ov-btns">
+      <button class="btn-restart" onclick="restartGame()">[ PLAY AGAIN ]</button>
+      <button class="btn-daily-ov" onclick="startDailyChallenge()">📅 DAILY</button>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="hdr">
+    <div class="hdr-title">[ SECURE KITCHEN PRO ]</div>
+    <div class="hdr-sub">URL Security Training &nbsp;·&nbsp; v11.0</div>
+    <div class="hdr-tagline">Build the correct URL. Don't get phished.</div>
+    <div class="top-nav">
+      <button class="nav-btn daily" onclick="startDailyChallenge()">📅 Daily</button>
+      <button class="nav-btn" onclick="toggleLeaderboard()">🏆 Top Scores</button>
+      <button class="nav-btn" onclick="toggleSound()" id="sound-btn">🔊 Sound</button>
+    </div>
+  </div>
+
+  <div class="daily-mode-bar" id="daily-bar">
+    <div class="dm-label">📅 Daily Challenge</div>
+    <div class="dm-info" id="daily-info">Q 1 / 10</div>
+    <button class="nav-btn" onclick="exitDaily()" style="font-size:11px;padding:3px 10px;">✕ Exit</button>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="stat-lbl">Score</div><div class="stat-val" id="s-score">0</div></div>
+    <div class="stat"><div class="stat-lbl">Streak</div><div class="stat-val" id="s-streak">0</div></div>
+    <div class="stat"><div class="stat-lbl">Lives</div><div class="stat-val" id="s-lives">❤❤❤</div></div>
+    <div class="stat"><div class="stat-lbl">Time</div><div class="stat-val g" id="s-time">30</div></div>
+    <div class="stat"><div class="stat-lbl">Level</div><div class="stat-val" id="s-level">1</div></div>
+  </div>
+
+  <div class="lvl-row"><span class="lvl-badge lv1" id="lvl-badge">[ LEVEL 1 — ROOKIE ]</span></div>
+
+  <div class="progress-section">
+    <div class="bar-hdr"><span>LEVEL PROGRESS</span><span id="xp-txt">0 / 4 correct to advance</span></div>
+    <div class="bar-track"><div class="bar-fill xp-fill" id="xp-bar" style="width:0%"></div></div>
+  </div>
+  <div class="progress-section">
+    <div class="bar-hdr"><span>TIME REMAINING</span><span id="timer-pct">100%</span></div>
+    <div class="bar-track"><div class="bar-fill timer-fill" id="timer-bar" style="width:100%"></div></div>
+  </div>
+
+  <div class="q-info">
+    <span id="q-num">Question 1</span>
+    <span id="q-correct">✓ 0 / 4 this level</span>
+  </div>
+
+  <!-- ORDER -->
+  <div class="panel" id="order-panel">
+    <div class="panel-lbl">
+      📡 Incoming Request
+      <span class="daily-tag" id="daily-tag" style="display:none">📅 DAILY</span>
+    </div>
+    <div class="order-txt" id="order-txt">Loading...</div>
+  </div>
+
+  <!-- UNIFIED GAME UI — buttons + type input on same screen, fully synced -->
+  <div id="game-ui">
+
+    <!-- URL display (read-only, built by buttons or typing) -->
+    <div class="panel" id="url-panel">
+      <div class="panel-lbl">🌐 Your URL</div>
+      <div class="url-box" id="url-box"><span class="cur"></span></div>
+    </div>
+
+    <!-- Feedback -->
+    <div class="feedback" id="k-feedback">
+      <div class="fb-title" id="k-fb-title"></div>
+      <div class="fb-tip" id="k-fb-tip"></div>
+      <div class="fb-correct" id="k-fb-correct"></div>
+    </div>
+
+    <!-- Diff (shown on wrong answer) -->
+    <div class="diff-box" id="diff-box">
+      <div class="panel-lbl" style="color:var(--red);margin-bottom:10px">🔬 Character Analysis</div>
+      <div class="diff-row"><div class="diff-label">YOU:</div><div class="diff-chars" id="diff-yours"></div></div>
+      <div class="diff-row"><div class="diff-label">CORRECT:</div><div class="diff-chars" id="diff-correct"></div></div>
+      <div class="section-breakdown" id="section-breakdown"></div>
+    </div>
+
+    <!-- Hint -->
+    <div class="hint-row">
+      <button class="btn-hint" id="hint-btn" onclick="useHint()">💡 Hint <span id="hint-count" style="opacity:.65;margin-left:3px">3</span></button>
+      <div class="hint-txt" id="hint-txt"></div>
+    </div>
+
+    <!-- Ingredients panel -->
+    <div class="panel">
+      <div class="panel-lbl">🧪 Click an ingredient &nbsp;<span style="opacity:.5;font-size:9px;letter-spacing:1px">OR type below</span></div>
+      <div class="ing-grid" id="ing-grid"></div>
+
+      <!-- Unified type input — synced with buttons -->
+      <div class="unified-input-wrap">
+        <div class="unified-input-row" id="unified-input-row">
+          <span class="u-prompt">▶</span>
+          <input id="unified-input" type="url" placeholder="or type the full URL here..."
+            autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+        </div>
+        <div class="u-live" id="u-live"></div>
+        <div class="u-kbd">
+          <span><span class="kbd">Enter</span> submit</span>
+          <span><span class="kbd">Esc</span> clear</span>
+          <span><span class="kbd">Backspace</span> undo last button</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions">
+      <button class="btn-serve" id="serve-btn" onclick="submitAnswer()">[ SERVE ]</button>
+      <button class="btn-undo" onclick="undoLast()">⌫ Undo</button>
+      <button class="btn-reset" onclick="resetAll()">✕ Reset</button>
+    </div>
+    <div style = "margin-top: 10px; text-align: center;">
+      <button class = "btn-home" onclick = "goHome()">⬅ Back to Home Page</button>
+    </div>
+  </div>
+</div><!-- #app -->
+
+<script>
+// ══════════════════════════════════════════════════════
+//  SOUND
+// ══════════════════════════════════════════════════════
+let soundOn=true,audioCtx=null;
+function getAudio(){ if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)(); return audioCtx; }
+function playTone(freq,type,dur,vol=0.15){
+  if(!soundOn) return;
+  try{
+    let ctx=getAudio(),o=ctx.createOscillator(),g=ctx.createGain();
+    o.connect(g);g.connect(ctx.destination);
+    o.type=type;o.frequency.value=freq;
+    g.gain.setValueAtTime(vol,ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+dur);
+    o.start();o.stop(ctx.currentTime+dur);
+  }catch(e){}
+}
+const sfxCorrect=()=>{playTone(523,'sine',.11,.13);setTimeout(()=>playTone(659,'sine',.11,.13),75);setTimeout(()=>playTone(784,'sine',.17,.15),150);};
+const sfxWrong=()=>{playTone(220,'sawtooth',.2,.12);setTimeout(()=>playTone(185,'sawtooth',.26,.12),95);};
+const sfxCombo=()=>{[523,659,784,1047].forEach((f,i)=>setTimeout(()=>playTone(f,'sine',.13,.14),i*55));};
+const sfxTick=()=>playTone(880,'square',.05,.055);
+const sfxLevelUp=()=>{[392,494,587,784].forEach((f,i)=>setTimeout(()=>playTone(f,'sine',.17,.19),i*75));};
+const sfxTimeout=()=>playTone(160,'sawtooth',.38,.17);
+const sfxType=()=>playTone(1100,'square',.025,.035);
+function toggleSound(){
+  soundOn=!soundOn;
+  let b=document.getElementById("sound-btn");
+  b.textContent=soundOn?"🔊 Sound":"🔇 Muted";
+  b.className=soundOn?"nav-btn":"nav-btn sound-off";
+}
+
+// ══════════════════════════════════════════════════════
+//  UNIFIED MODE — always 'unified', no switching needed
+// ══════════════════════════════════════════════════════
+const gameMode='unified'; // kept for leaderboard save label compat
+
+// ══════════════════════════════════════════════════════
+//  FIX 1: MASSIVELY EXPANDED URL POOL
+//  Each level now has 20+ unique URLs
+//  + "no-repeat until pool exhausted" queue system
+// ══════════════════════════════════════════════════════
+const LEVELS=[null,
+  // LEVEL 1 — ROOKIE (time: 40s — FIX 4: increased from 32)
+  {name:"ROOKIE",cls:"lv1",time:40,correctNeeded:4,
+    orders:[
+      {q:"Open Facebook homepage",              url:"https://facebook.com"},
+      {q:"Search something on Google",          url:"https://google.com"},
+      {q:"Watch a video on YouTube",            url:"https://youtube.com"},
+      {q:"Open Twitter / X feed",               url:"https://twitter.com"},
+      {q:"Browse a Wikipedia article",          url:"https://wikipedia.org"},
+      {q:"Visit Reddit homepage",               url:"https://reddit.com"},
+      {q:"Browse Pinterest boards",             url:"https://pinterest.com"},
+      {q:"Open Tumblr blog",                    url:"https://tumblr.com"},
+      {q:"Visit Yahoo homepage",                url:"https://yahoo.com"},
+      {q:"Open Bing search engine",             url:"https://bing.com"},
+      {q:"Browse IMDb movie database",          url:"https://imdb.com"},
+      {q:"Read CNN breaking news",              url:"https://cnn.com"},
+      {q:"Visit ESPN sports scores",            url:"https://espn.com"},
+      {q:"Open Craigslist listings",            url:"https://craigslist.org"},
+      {q:"Browse Etsy handmade goods",          url:"https://etsy.com"},
+      {q:"Open DuckDuckGo search",              url:"https://duckduckgo.com"},
+      {q:"Visit Weather.com forecast",          url:"https://weather.com"},
+      {q:"Open Twitch gaming streams",          url:"https://twitch.tv"},
+      {q:"Browse Goodreads books",              url:"https://goodreads.com"},
+      {q:"Visit Flickr photo gallery",          url:"https://flickr.com"},
+    ],
+    extras:["http://","facebok","g00gle","youtub3","tw1tter","wikip3dia",
+            ".com",".net","redd1t","p1nterest","tumblr.net","yah00","b1ng",
+            "imd8","cnn.net","espn.org","cra1gslist","ets3","duckduckgo.net"]
+  },
+  // LEVEL 2 — ANALYST (time: 32s — increased from 25)
+  {name:"ANALYST",cls:"lv2",time:32,correctNeeded:5,
+    orders:[
+      {q:"Check Gmail inbox",                   url:"https://gmail.com"},
+      {q:"Shop on Amazon",                      url:"https://amazon.com"},
+      {q:"Open Instagram profile",              url:"https://instagram.com"},
+      {q:"Send money via PayPal",               url:"https://paypal.com"},
+      {q:"View LinkedIn profile",               url:"https://linkedin.com"},
+      {q:"Visit Stack Overflow",                url:"https://stackoverflow.com"},
+      {q:"Browse eBay listings",                url:"https://ebay.com"},
+      {q:"Read BBC news",                       url:"https://bbc.com"},
+      {q:"Open Snapchat web",                   url:"https://web.snapchat.com"},
+      {q:"Visit Quora for answers",             url:"https://quora.com"},
+      {q:"Open Outlook email",                  url:"https://outlook.com"},
+      {q:"Browse Walmart online store",         url:"https://walmart.com"},
+      {q:"Visit The Guardian news",             url:"https://theguardian.com"},
+      {q:"Open Zoom video call",                url:"https://zoom.us"},
+      {q:"Browse Netflix catalog",              url:"https://netflix.com"},
+      {q:"Visit Coursera online courses",       url:"https://coursera.org"},
+      {q:"Open Dropbox file storage",           url:"https://dropbox.com"},
+      {q:"Visit Spotify music player",          url:"https://spotify.com"},
+      {q:"Open Slack workspace",                url:"https://slack.com"},
+      {q:"Visit Adobe creative cloud",          url:"https://adobe.com"},
+      {q:"Open Airbnb travel listings",         url:"https://airbnb.com"},
+      {q:"Browse Booking.com hotels",           url:"https://booking.com"},
+    ],
+    extras:["http://","amaz0n","paypa1","1nstagram","linkedln","eBey",".com",".net",
+            "g00glemail","snap.chat","qu0ra","outl00k","walm4rt","guardan",
+            "zo0m","netfl1x","cours3ra","dr0pbox","sp0tify","sl4ck","adob3"]
+  },
+  // LEVEL 3 — HUNTER (time: 26s — increased from 19)
+  {name:"HUNTER",cls:"lv3",time:26,correctNeeded:5,
+    orders:[
+      {q:"Push code to GitHub",                 url:"https://github.com"},
+      {q:"Browse Steam game store",             url:"https://store.steampowered.com"},
+      {q:"Manage Trello project boards",        url:"https://trello.com"},
+      {q:"Read Hacker News",                    url:"https://news.ycombinator.com"},
+      {q:"Access Notion workspace",             url:"https://notion.so"},
+      {q:"Open Discord server",                 url:"https://discord.com"},
+      {q:"Visit Stack Exchange network",        url:"https://stackexchange.com"},
+      {q:"Open GitLab repository",              url:"https://gitlab.com"},
+      {q:"Access Bitbucket repos",              url:"https://bitbucket.org"},
+      {q:"Open NPM package registry",           url:"https://npmjs.com"},
+      {q:"Visit Docker Hub images",             url:"https://hub.docker.com"},
+      {q:"Open Cloudflare dashboard",           url:"https://cloudflare.com"},
+      {q:"Browse DigitalOcean droplets",        url:"https://digitalocean.com"},
+      {q:"Access Heroku app dashboard",         url:"https://heroku.com"},
+      {q:"Open Jira project board",             url:"https://atlassian.com"},
+      {q:"Visit Medium blog platform",          url:"https://medium.com"},
+      {q:"Open Dev.to developer blog",          url:"https://dev.to"},
+      {q:"Access Postman API testing",          url:"https://postman.com"},
+      {q:"Visit CodePen playground",            url:"https://codepen.io"},
+      {q:"Open Replit coding environment",      url:"https://replit.com"},
+      {q:"Browse Product Hunt launches",        url:"https://producthunt.com"},
+      {q:"Visit Kaggle data science",           url:"https://kaggle.com"},
+    ],
+    extras:["http://","g1thub","steamprowered","trell0","not1on","disc0rd",
+            ".com",".net","g1tlab","bitbuck3t","npm1s","h0b.docker","cl0udflare",
+            "dig1talocean","her0ku","atlass1an","med1um","dev.t0","postm4n",
+            "codep3n","repl1t","producthunt.net"]
+  },
+  // LEVEL 4 — ELITE (time: 20s — increased from 13)
+  {name:"ELITE",cls:"lv4",time:20,correctNeeded:6,
+    orders:[
+      {q:"Log into Chase bank account",         url:"https://chase.com"},
+      {q:"Open Microsoft account portal",       url:"https://microsoft.com"},
+      {q:"Manage your Apple ID",                url:"https://apple.com"},
+      {q:"Access Google Drive files",           url:"https://drive.google.com"},
+      {q:"Open WhatsApp Web messages",          url:"https://web.whatsapp.com"},
+      {q:"Browse AWS Management Console",       url:"https://aws.amazon.com"},
+      {q:"Open Figma design tool",              url:"https://figma.com"},
+      {q:"Log into Salesforce CRM",             url:"https://salesforce.com"},
+      {q:"Open Shopify store admin",            url:"https://shopify.com"},
+      {q:"Access Google Analytics dashboard",   url:"https://analytics.google.com"},
+      {q:"Open Twilio console",                 url:"https://console.twilio.com"},
+      {q:"Visit SendGrid email platform",       url:"https://sendgrid.com"},
+      {q:"Access MongoDB Atlas database",       url:"https://cloud.mongodb.com"},
+      {q:"Open Stripe payment dashboard",       url:"https://dashboard.stripe.com"},
+      {q:"Visit Auth0 identity platform",       url:"https://auth0.com"},
+      {q:"Access Firebase console",             url:"https://console.firebase.google.com"},
+      {q:"Open Netlify hosting dashboard",      url:"https://netlify.com"},
+      {q:"Access GitHub Actions CI",            url:"https://github.com"},
+      {q:"Open Vercel deployment dashboard",    url:"https://vercel.com"},
+      {q:"Access New Relic monitoring",         url:"https://newrelic.com"},
+      {q:"Open PagerDuty incidents",            url:"https://app.pagerduty.com"},
+      {q:"Visit Zendesk support portal",        url:"https://zendesk.com"},
+    ],
+    extras:["http://","ch4se","m1crosoft","appl3","secure.","login.","dr1ve.google",
+            "web.whatsaap","amaz0n.aws","f1gma","salesf0rce","sh0pify",
+            "analyt1cs.google","cons0le.twilio","sendgr1d","cl0ud.mongodb",
+            "dashboard.str1pe","auth-0","consle.firebase","netl1fy","verc3l",
+            ".net",".live","microsoft.net","apple.org","stripe.net"]
+  },
+  // LEVEL 5 — HELL MODE (time: 16s — increased from 9)
+  {name:"HELL MODE",cls:"lv5",time:16,correctNeeded:6,
+    orders:[
+      {q:"Access IRS tax portal",               url:"https://irs.gov"},
+      {q:"Log into Wells Fargo bank",           url:"https://wellsfargo.com"},
+      {q:"Open Coinbase crypto wallet",         url:"https://coinbase.com"},
+      {q:"Log into Binance exchange",           url:"https://binance.com"},
+      {q:"Check Robinhood portfolio",           url:"https://robinhood.com"},
+      {q:"Access Kraken crypto account",        url:"https://kraken.com"},
+      {q:"Log into Bank of America",            url:"https://bankofamerica.com"},
+      {q:"Check your Fidelity account",         url:"https://fidelity.com"},
+      {q:"Open TD Ameritrade account",          url:"https://tdameritrade.com"},
+      {q:"Access Charles Schwab",               url:"https://schwab.com"},
+      {q:"Log into USAA banking",               url:"https://usaa.com"},
+      {q:"Open Crypto.com exchange",            url:"https://crypto.com"},
+      {q:"Access Gemini crypto exchange",       url:"https://gemini.com"},
+      {q:"Log into Capital One bank",           url:"https://capitalone.com"},
+      {q:"Access Citibank online banking",      url:"https://citibank.com"},
+      {q:"Log into HSBC online banking",        url:"https://hsbc.com"},
+      {q:"Open Etrade investment account",      url:"https://etrade.com"},
+      {q:"Access Vanguard investments",         url:"https://vanguard.com"},
+      {q:"Open Blockchain.com wallet",          url:"https://blockchain.com"},
+      {q:"Log into Truist bank",                url:"https://truist.com"},
+      {q:"Access SoFi financial account",       url:"https://sofi.com"},
+      {q:"Open Webull trading platform",        url:"https://webull.com"},
+    ],
+    extras:["http://","1rs","irs.com","we11sfargo","co1nbase","b1nance","r0binhood","kr4ken",
+            "secure.","login.","verify.","account.","support.","update.",
+            ".net",".live",".xyz","bankofamer1ca","fide1ity","tdamer1trade","schw4b","us4a",
+            "coinbase.net","binance.org","crypt0","gem1ni","cap1talone","c1tibank",
+            "hzbc","etrad3","vangu4rd","blockcha1n","tru1st","s0fi","webbu11"]
+  },
+  // LEVEL 6 — NIGHTMARE (time: 12s — increased from 7)
+  {name:"NIGHTMARE",cls:"lv6",time:12,correctNeeded:999,
+    orders:[
+      {q:"Access SSA social security portal",   url:"https://ssa.gov"},
+      {q:"Open MetaMask Ethereum wallet",       url:"https://metamask.io"},
+      {q:"Access AWS S3 bucket console",        url:"https://s3.console.aws.amazon.com"},
+      {q:"Open Google Cloud Console",           url:"https://console.cloud.google.com"},
+      {q:"Access Azure portal dashboard",       url:"https://portal.azure.com"},
+      {q:"Open HashiCorp Vault project",        url:"https://vaultproject.io"},
+      {q:"Access Ledger hardware wallet",       url:"https://ledger.com"},
+      {q:"Open Terraform Cloud workspace",      url:"https://app.terraform.io"},
+      {q:"Open Datadog monitoring",             url:"https://app.datadoghq.com"},
+      {q:"Access CircleCI pipeline",            url:"https://app.circleci.com"},
+      {q:"Open Sentry error tracking",          url:"https://sentry.io"},
+      {q:"Log into Vercel dashboard",           url:"https://vercel.com"},
+      {q:"Access Grafana observability",        url:"https://grafana.com"},
+      {q:"Open Kubernetes dashboard",           url:"https://kubernetes.io"},
+      {q:"Access Ansible automation hub",       url:"https://ansible.com"},
+      {q:"Open Jenkins CI/CD pipeline",         url:"https://jenkins.io"},
+      {q:"Access Splunk SIEM platform",         url:"https://splunk.com"},
+      {q:"Open Elastic SIEM dashboard",         url:"https://elastic.co"},
+      {q:"Access CrowdStrike Falcon",           url:"https://falcon.crowdstrike.com"},
+      {q:"Open Okta identity dashboard",        url:"https://okta.com"},
+      {q:"Access Qualys vulnerability scan",    url:"https://qualys.com"},
+      {q:"Open Nessus vulnerability manager",   url:"https://tenable.com"},
+      {q:"Access Snyk security platform",       url:"https://snyk.io"},
+      {q:"Open Rapid7 InsightVM",               url:"https://rapid7.com"},
+    ],
+    extras:["http://","ssa.com","metamas1k","s3.console.aws.amaz0n","console.cloud.go0gle",
+            "porta1.azure","vaultpr0ject","1edger","app.terraf0rm","app.datad0ghq",
+            "app.c1rcleci","sentr4","verc3l","grafan4","kubernates","ans1ble",
+            "jenk1ns","sp1unk","elast1c","falcon.cr0wdstrike","okt4","qua1ys",
+            "tenab1e","sn4k","rap1d7","secure.","login.","verify.","account.",
+            "support.","update.","portal.","auth.","api.",
+            ".net",".live",".xyz",".store",
+            "metamask.com","sentry.com","vault.io","terraform.com","vercel.io","snyk.com"]
+  }
+];
+
+const TRAP_SET=new Set([
+  "http://",
+  "facebok","g00gle","youtub3","tw1tter","wikip3dia","redd1t","p1nterest","yah00","b1ng","imd8","cnn.net","espn.org","cra1gslist","ets3","duckduckgo.net",
+  "amaz0n","paypa1","1nstagram","linkedln","eBey","g00glemail","snap.chat","qu0ra","outl00k","walm4rt","guardan","zo0m","netfl1x","cours3ra","dr0pbox","sp0tify","sl4ck","adob3",
+  "g1thub","steamprowered","trell0","not1on","disc0rd","g1tlab","bitbuck3t","npm1s","h0b.docker","cl0udflare","dig1talocean","her0ku","atlass1an","med1um","dev.t0","postm4n","codep3n","repl1t","producthunt.net",
+  "ch4se","m1crosoft","appl3","secure.","login.","dr1ve.google","web.whatsaap","amaz0n.aws","f1gma","salesf0rce","sh0pify","analyt1cs.google","cons0le.twilio","sendgr1d","cl0ud.mongodb","dashboard.str1pe","auth-0","consle.firebase","netl1fy","verc3l",
+  "1rs","irs.com","we11sfargo","co1nbase","b1nance","r0binhood","kr4ken","bankofamer1ca","fide1ity","tdamer1trade","schw4b","us4a","coinbase.net","binance.org","crypt0","gem1ni","cap1talone","c1tibank","hzbc","etrad3","vangu4rd","blockcha1n","tru1st","s0fi","webbu11",
+  "ssa.com","metamas1k","s3.console.aws.amaz0n","console.cloud.go0gle","porta1.azure","vaultpr0ject","1edger","app.terraf0rm","app.datad0ghq","app.c1rcleci","sentr4","verc3l","grafan4","kubernates","ans1ble","jenk1ns","sp1unk","elast1c","falcon.cr0wdstrike","okt4","qua1ys","tenab1e","sn4k","rap1d7",
+  "verify.","account.","support.","update.","portal.","auth.","api.",
+  ".net",".live",".xyz",".store",
+  "tumblr.net","twitch.com","ebay.org","zoom.com","notion.com","microsoft.net","apple.org","stripe.net",
+  "metamask.com","sentry.com","vault.io","terraform.com","vercel.io","snyk.com"
+]);
+
+// ══════════════════════════════════════════════════════
+//  FIX 1: NO-REPEAT QUEUE — questions cycle through all
+//  URLs before any repeats
+// ══════════════════════════════════════════════════════
+let levelQueues={};
+function getNextOrder(){
+  let c=cfg();
+  let lv=level;
+  if(!levelQueues[lv]||levelQueues[lv].length===0){
+    // Refill and shuffle the full pool
+    levelQueues[lv]=shuffle([...c.orders]);
+  }
+  return levelQueues[lv].pop();
+}
+
+// ══════════════════════════════════════════════════════
+//  DAILY
+// ══════════════════════════════════════════════════════
+const ALL_ORDERS=LEVELS.slice(1).flatMap(l=>l.orders);
+function getDailyKey(){ let d=new Date(); return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`; }
+function seededRand(seed){ let s=seed|0; return()=>{ s+=0x6D2B79F5; let t=Math.imul(s^s>>>15,1|s); t^=t+Math.imul(t^t>>>7,61|t); return((t^t>>>14)>>>0)/4294967296; }; }
+function getDailyOrders(){
+  let hash=[...getDailyKey()].reduce((a,c)=>Math.imul(31,a)+c.charCodeAt(0)|0,0);
+  let rand=seededRand(hash),pool=[...ALL_ORDERS];
+  for(let i=pool.length-1;i>0;i--){ let j=Math.floor(rand()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]]; }
+  return pool.slice(0,10);
+}
+
+// ══════════════════════════════════════════════════════
+//  LEADERBOARD
+// ══════════════════════════════════════════════════════
+function loadLB(){ try{ return JSON.parse(localStorage.getItem("skp_lb")||"[]"); }catch(e){ return[]; } }
+function saveLB(lb){ try{ localStorage.setItem("skp_lb",JSON.stringify(lb)); }catch(e){} }
+function addToLB(e){ let lb=loadLB(); lb.push(e); lb.sort((a,b)=>b.score-a.score); lb=lb.slice(0,5); saveLB(lb); return lb; }
+function renderLB(newScore){
+  let lb=loadLB(),el=document.getElementById("lb-list");
+  if(!lb.length){ el.innerHTML='<div style="font-size:12px;color:var(--dim);text-align:center;padding:10px;">No scores yet!</div>'; return; }
+  const medals=["gold","silver","bronze"];
+  el.innerHTML=lb.map((e,i)=>`
+    <div class="lb-row">
+      <div class="lb-rank ${medals[i]||''}">${["🥇","🥈","🥉"][i]||"#"+(i+1)}</div>
+      <div class="lb-info">
+        <div class="lb-score">${e.score} <span style="font-size:11px;color:var(--dim)">pts</span></div>
+        <div class="lb-meta">Lv${e.level} · ${e.acc} · ${e.mode} · ${e.date}</div>
+      </div>
+      <div class="lb-badge-slot">${e.score===newScore?'<span class="lb-new">NEW!</span>':''}</div>
+    </div>`).join('');
+}
+function toggleLeaderboard(){
+  let lb=loadLB();
+  if(!lb.length){ alert("No scores yet — play first!"); return; }
+  alert("🏆 TOP SCORES\n\n"+lb.map((e,i)=>`#${i+1}  ${e.score}pts  Lv${e.level}  ${e.acc}  ${e.mode}  ${e.date}`).join('\n'));
+}
+
+// ══════════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════════
+let score=0,level=1,streak=0,bestStreak=0,maxCombo=0;
+let lives=3,hints=3;
+let builtUrl=[],correctUrl="",currentQ=null;
+let timer=null,timeLeft=30,maxTime=30;
+let serving=false;
+let totalQ=0,correctQ=0,levelCorrect=0,maxLevelReached=1;
+let totalTimeUsed=0,totalAnswered=0,factIndex=0;
+let wrongAnswers=[];
+let dailyMode=false,dailyOrders=[],dailyIndex=0;
+
+const shuffle=a=>{ for(let i=a.length-1;i>0;i--){ let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]; } return a; };
+const cfg=()=>LEVELS[Math.min(level,6)];
+const livesHtml=()=>"❤".repeat(lives)+"🖤".repeat(Math.max(0,3-lives));
+function parseUrl(url){
+  let proto=url.startsWith("https")?"https://":"http://";
+  let domain=url.replace(/^https?:\/\//,"");
+  let dot=domain.lastIndexOf(".");
+  return[proto,domain.substring(0,dot),domain.substring(dot)];
+}
+
+// ══════════════════════════════════════════════════════
+//  TIMER
+// ══════════════════════════════════════════════════════
+function startTimer(){
+  clearInterval(timer);
+  maxTime=dailyMode?25:cfg().time;
+  
+  timeLeft=maxTime;
+  renderTimer();
+  timer=setInterval(()=>{
+    timeLeft--;
+    renderTimer();
+    if(timeLeft<=5) sfxTick();
+    if(timeLeft<=0){ clearInterval(timer); onTimeout(); }
+  },1000);
+}
+function renderTimer(){
+  let pct=timeLeft/maxTime;
+  let bar=document.getElementById("timer-bar"),lbl=document.getElementById("timer-pct"),sv=document.getElementById("s-time");
+  bar.style.width=(pct*100)+"%"; lbl.textContent=Math.round(pct*100)+"%"; sv.textContent=timeLeft;
+  if(pct>.55){bar.style.background="var(--green)";sv.className="stat-val g";}
+  else if(pct>.25){bar.style.background="var(--yellow)";sv.className="stat-val o";}
+  else{bar.style.background="var(--red)";sv.className="stat-val r";}
+}
+function onTimeout(){
+  serving=false; streak=0; lives--; totalTimeUsed+=maxTime; totalAnswered++;
+  sfxTimeout();
+  wrongAnswers.push({q:currentQ.q,yours:"(timeout)",correct:correctUrl,tip:"⏱ Ran out of time — practice reading URLs faster!"});
+  showFeedback(false,"⏱ TIME'S UP!","Too slow — keep training!","Correct: "+correctUrl);
+  refreshStats();
+  if(lives<=0){ endGame(); return; }
+  setTimeout(()=>nextQ(),2100);
+}
+
+// ══════════════════════════════════════════════════════
+//  QUESTION
+// ══════════════════════════════════════════════════════
+function loadQ(){
+  let ord;
+  if(dailyMode){
+    if(dailyIndex>=dailyOrders.length){ endGame(); return; }
+    ord=dailyOrders[dailyIndex];
+    document.getElementById("daily-info").textContent=`Q ${dailyIndex+1} / ${dailyOrders.length}`;
+  } else {
+    ord=getNextOrder(); // FIX 1: uses no-repeat queue
+  }
+  currentQ=ord; correctUrl=ord.url;
+  document.getElementById("order-txt").textContent=ord.q;
+  document.getElementById("q-num").textContent=`Question ${totalQ+1}`;
+  let cn=cfg().correctNeeded;
+  document.getElementById("q-correct").textContent=`✓ ${levelCorrect}/${cn!==999?cn:"∞"} this level`;
+  builtUrl=[];
+  resetAll(); hideFeedback(); hideHint();
+  loadIngredients();
+  updateXpBar(); startTimer();
+  document.getElementById("serve-btn").disabled=false;
+  setTimeout(()=>document.getElementById("unified-input").focus(),100);
+}
+function nextQ(){ serving=false; totalQ++; if(dailyMode) dailyIndex++; loadQ(); }
+
+// ══════════════════════════════════════════════════════
+//  LOOKALIKE GENERATOR
+//  For each real token, generates 3 near-identical fakes
+//  using character substitutions — same as real phishing
+// ══════════════════════════════════════════════════════
+
+// substitution map — each char can become these lookalikes
+const SUBS = {
+  'a':['4','@','à'], 'b':['6','ḅ','þ'], 'c':['ç','ć','¢'],
+  'e':['3','é','ê'], 'g':['9','ğ','ġ'], 'h':['ħ','ḥ','ĥ'],
+  'i':['1','í','ï','l'], 'l':['1','I','ĺ','ļ'], 'n':['ñ','ń','ṅ'],
+  'o':['0','ó','ö','ọ'], 'p':['ρ','þ','ṗ'], 'q':['9','ğ','ʠ'],
+  'r':['ŕ','ṙ','ɾ'], 's':['5','$','ś'], 't':['7','ţ','ṫ'],
+  'u':['ü','ú','ụ'], 'v':['ṿ','ν','ⱴ'], 'w':['ẃ','ŵ','ẇ'],
+  'x':['×','χ','ẋ'], 'y':['ý','ÿ','ẏ'], 'z':['2','ź','ẑ'],
+  '0':['o','O','ο'], '1':['l','I','i'],
+};
+
+// Protocol fakes — always the same set
+const PROTO_FAKES = ['http://', 'https:/', 'htpps://', 'https//'];
+
+// TLD fakes per real TLD
+const TLD_FAKES = {
+  '.com': ['.com.co', '.c0m', '.corn', '.cam'],
+  '.org': ['.org.co', '.0rg', '.ory', '.orq'],
+  '.gov': ['.gov.co', '.g0v', '.goy', '.qov'],
+  '.io':  ['.i0', '.lo', '.1o', '.io.co'],
+  '.tv':  ['.tv.co', '.tv.net', '.7v', '.t5'],
+  '.us':  ['.us.co', '.u5', '.vs', '.us.net'],
+  '.so':  ['.so.co', '.s0', '.50', '.so.net'],
+  '.to':  ['.to.co', '.t0', '.7o', '.to.net'],
+  '.co':  ['.co.co', '.c0', '.co.net', '.c9'],
+};
+
+function makeLokalikes(token, count=3){
+  // For a given token string, produce `count` near-identical fakes
+  let results = new Set();
+  let attempts = 0;
+  while(results.size < count && attempts < 200){
+    attempts++;
+    let chars = token.split('');
+    // Find positions that have substitutions available
+    let subPos = chars.map((c,i)=>[i,c]).filter(([i,c])=>SUBS[c.toLowerCase()]);
+    if(!subPos.length) break;
+    // Pick 1-2 random positions to swap
+    shuffle(subPos);
+    let numSwaps = Math.min(1 + (level>=3?1:0), subPos.length);
+    let fake = [...chars];
+    for(let s=0;s<numSwaps;s++){
+      let [pos, ch] = subPos[s];
+      let opts = SUBS[ch.toLowerCase()];
+      fake[pos] = opts[Math.floor(Math.random()*opts.length)];
+    }
+    let fakeStr = fake.join('');
+    if(fakeStr !== token) results.add(fakeStr);
+  }
+  // Pad with simple number swaps if not enough generated
+  const padFakes = ['0','1','3','4','5'].map(n=>token.replace(/[aeiou]/i, n));
+  padFakes.forEach(f=>{ if(results.size<count && f!==token) results.add(f); });
+  return [...results].slice(0,count);
+}
+
+function loadIngredients(){
+  let [proto, base, tld] = parseUrl(correctUrl);
+
+  // Generate lookalikes for each part
+  let protoFakes = shuffle([...PROTO_FAKES].filter(f=>f!==proto)).slice(0,3);
+  let baseFakes  = makeLokalikes(base, 3);
+  let tldFakes   = shuffle([...(TLD_FAKES[tld]||TLD_FAKES['.com'])].filter(f=>f!==tld)).slice(0,3);
+
+  // Build pool: 1 real + 3 fakes per part = 12 total, then trim to 8
+  // We always keep all 3 real tokens. Fakes fill remaining 5 slots (8 - 3 = 5)
+  // Pick fakes smartly: at least 1 fake per part, then fill remaining randomly
+  let allFakes = shuffle([...protoFakes, ...baseFakes, ...tldFakes]);
+  // Guarantee at least 1 fake per section in the 8 buttons
+  let selectedFakes = [
+    protoFakes[0],   // 1 proto fake
+    baseFakes[0],    // 1 base fake
+    tldFakes[0],     // 1 tld fake
+    ...shuffle([protoFakes[1], protoFakes[2], baseFakes[1], baseFakes[2], tldFakes[1], tldFakes[2]])
+      .slice(0, 2)   // 2 more random fakes
+  ].filter(Boolean);
+
+  // Final pool: 3 real + 5 fakes = 8 total
+  let pool = shuffle([proto, base, tld, ...selectedFakes]);
+
+  // Deduplicate (edge case)
+  pool = [...new Set(pool)];
+  // Ensure real tokens always present
+  [proto, base, tld].forEach(r=>{ if(!pool.includes(r)) pool.push(r); });
+  // Trim to 8
+  pool = shuffle(pool).slice(0, 8);
+  [proto, base, tld].forEach(r=>{ if(!pool.includes(r)) pool.push(r); });
+  if(pool.length > 8){
+    // Remove a fake to get back to 8
+    let fakeInPool = pool.findIndex(p=>p!==proto&&p!==base&&p!==tld);
+    if(fakeInPool>=0) pool.splice(fakeInPool,1);
+  }
+  pool = shuffle(pool);
+
+  let grid = document.getElementById("ing-grid");
+  grid.innerHTML = "";
+  pool.forEach(item=>{
+    let isReal = (item===proto||item===base||item===tld);
+    let btn = document.createElement("button");
+    btn.textContent = item;
+    btn.className = "ing" + (isReal ? "" : " trap");
+    btn.onclick = ()=>{
+      if(btn.classList.contains("used")) return;
+      btn.classList.add("used","selected");
+      builtUrl.push(item);
+      syncInputFromButtons(); // push to text input too
+      runLiveValidation();
+    };
+    grid.appendChild(btn);
+  });
+}
+
+// ══════════════════════════════════════════════════════
+//  UNIFIED SYNC — buttons ↔ text input always in sync
+// ══════════════════════════════════════════════════════
+
+// Called after button click — pushes joined builtUrl into text input
+function syncInputFromButtons(){
+  let inp = document.getElementById("unified-input");
+  inp.value = builtUrl.join("");
+  refreshUrlDisplay();
+}
+
+// Called after typing — parses typed value back into builtUrl display
+function refreshUrlDisplay(){
+  let val = document.getElementById("unified-input").value;
+  let ub = document.getElementById("url-box");
+  ub.innerHTML = (val || "") + '<span class="cur"></span>';
+  ub.className = "url-box";
+}
+
+function undoLast(){
+  // If there's text typed manually, remove last char
+  let inp = document.getElementById("unified-input");
+  if(inp.value.length > 0){
+    // Check if last part matches a button — unmark it
+    let last = builtUrl[builtUrl.length-1];
+    if(last && inp.value.endsWith(last)){
+      builtUrl.pop();
+      let btns=[...document.querySelectorAll(".ing.used")];
+      for(let i=btns.length-1;i>=0;i--){
+        if(btns[i].textContent===last){ btns[i].classList.remove("used","selected"); break; }
+      }
+      inp.value = builtUrl.join("");
+    } else {
+      // Pure typed — just delete last char
+      inp.value = inp.value.slice(0,-1);
+      builtUrl = [inp.value]; // treat whole typed string as one token
+    }
+    refreshUrlDisplay();
+    runLiveValidation();
+  }
+}
+
+function resetAll(){
+  builtUrl = [];
+  let inp = document.getElementById("unified-input");
+  inp.value = "";
+  document.querySelectorAll(".ing").forEach(b=>b.classList.remove("selected","used"));
+  refreshUrlDisplay();
+  document.getElementById("u-live").textContent = "";
+  document.getElementById("unified-input-row").className = "unified-input-row";
+  document.getElementById("diff-box").classList.remove("on");
+}
+
+// ══════════════════════════════════════════════════════
+//  LIVE VALIDATION (runs on every input change)
+// ══════════════════════════════════════════════════════
+function runLiveValidation(){
+  let val = document.getElementById("unified-input").value;
+  let live = document.getElementById("u-live");
+  let row = document.getElementById("unified-input-row");
+  if(!val){ live.textContent=""; row.className="unified-input-row"; return; }
+  if(correctUrl.startsWith(val)){
+    if(val === correctUrl){
+      live.className="u-live u-live-ok"; live.textContent="✓ Complete! Press Enter or click SERVE";
+      row.className="unified-input-row u-ok";
+    } else {
+      let rem = correctUrl.substring(val.length);
+      live.className="u-live u-live-partial"; live.textContent="→ " + rem;
+      row.className="unified-input-row";
+    }
+  } else {
+    let i=0;
+    while(i<val.length && i<correctUrl.length && val[i]===correctUrl[i]) i++;
+    live.className="u-live u-live-err";
+    live.textContent=`✗ Position ${i+1}: "${val[i]||""}" should be "${correctUrl[i]||""}"`;
+    row.className="unified-input-row u-err";
+    setTimeout(()=>{ let r=document.getElementById("unified-input-row"); if(!r.classList.contains("u-ok")) r.className="unified-input-row"; },400);
+  }
+}
+
+// ══════════════════════════════════════════════════════
+//  SUBMIT — single path for buttons + typing
+// ══════════════════════════════════════════════════════
+function submitAnswer(){
+  if(serving) return;
+  let val = document.getElementById("unified-input").value.trim();
+  if(!val) return;
+  serving = true; clearInterval(timer);
+  document.getElementById("serve-btn").disabled = true;
+  totalTimeUsed += maxTime - timeLeft; totalAnswered++;
+  processAnswer(val);
+}
+
+// keyboard setup
+document.addEventListener("DOMContentLoaded",()=>{
+  let inp = document.getElementById("unified-input");
+  inp.addEventListener("input", ()=>{
+    // When user types, builtUrl becomes the whole typed string (no button tracking)
+    builtUrl = [inp.value];
+    refreshUrlDisplay();
+    runLiveValidation();
+    sfxType();
+  });
+  inp.addEventListener("keydown", e=>{
+    if(e.key==="Enter"){ e.preventDefault(); submitAnswer(); }
+    if(e.key==="Escape"){ e.preventDefault(); resetAll(); }
+  });
+});
+
+// ══════════════════════════════════════════════════════
+//  ANSWER PROCESSOR
+// ══════════════════════════════════════════════════════
+function processAnswer(userUrl){
+  if(userUrl===correctUrl){
+    let speedBonus=Math.min(Math.floor(timeLeft*1.5),35);
+    let base=40+(level*18);
+    let earned=base+speedBonus;
+    streak++; bestStreak=Math.max(bestStreak,streak); correctQ++; levelCorrect++;
+    let comboBonus=0,comboTxt="";
+    if(streak>=8){comboBonus=80;comboTxt="🔥 x8 GODMODE +"+comboBonus;maxCombo=Math.max(maxCombo,8);}
+    else if(streak>=5){comboBonus=50;comboTxt="🔥 x5 COMBO +"+comboBonus;maxCombo=Math.max(maxCombo,5);}
+    else if(streak>=3){comboBonus=25;comboTxt="⚡ x3 COMBO +"+comboBonus;maxCombo=Math.max(maxCombo,3);}
+    if(comboTxt){showCombo(comboTxt);sfxCombo();}else sfxCorrect();
+    score+=earned+comboBonus;
+    let msg=`✅ CORRECT! +${earned}${speedBonus>0?" (⚡+"+speedBonus+" speed)":""}${comboBonus>0?" + 🔥"+comboBonus:""}`;
+    showFeedback(true,msg,securityFact(),"");
+    document.getElementById("url-panel").classList.add("flash-ok");
+    setTimeout(()=>document.getElementById("url-panel").classList.remove("flash-ok"),600);
+    document.getElementById("url-box").className="url-box correct";
+    document.getElementById("unified-input-row").className="unified-input-row u-ok";
+    checkLevelUp();
+  } else {
+    streak=0; lives--;
+    sfxWrong();
+    let tip=makeTip(userUrl,correctUrl);
+    wrongAnswers.push({q:currentQ.q,yours:userUrl||"(empty)",correct:correctUrl,tip});
+    showFeedback(false,"❌ WRONG — Breach Detected!",tip,"Correct: "+correctUrl);
+    document.getElementById("url-box").className="url-box wrong";
+    document.getElementById("unified-input-row").className="unified-input-row u-err";
+    document.querySelectorAll(".ing.selected").forEach(b=>{b.classList.add("shake");setTimeout(()=>b.classList.remove("shake"),450);});
+    showDiff(userUrl,correctUrl);
+    refreshStats();
+  }
+  if(lives<=0){ setTimeout(()=>endGame(),1900); return; }
+  setTimeout(()=>nextQ(),2600);
+}
+
+// ══════════════════════════════════════════════════════
+//  DIFF
+// ══════════════════════════════════════════════════════
+function showDiff(user,correct){
+  let maxLen=Math.max(user.length,correct.length);
+  let yH="",cH="";
+  for(let i=0;i<maxLen;i++){
+    let u=user[i]||"",c=correct[i]||"";
+    if(u===c){ yH+=`<span class="dc-ok">${esc(u)}</span>`; cH+=`<span class="dc-ok">${esc(c)}</span>`; }
+    else if(!u){ yH+=`<span class="dc-missing">_</span>`; cH+=`<span class="dc-err">${esc(c)}</span>`; }
+    else if(!c){ yH+=`<span class="dc-err">${esc(u)}</span>`; cH+=`<span class="dc-missing">_</span>`; }
+    else{ yH+=`<span class="dc-err">${esc(u)}</span>`; cH+=`<span class="dc-err">${esc(c)}</span>`; }
+  }
+  document.getElementById("diff-yours").innerHTML=yH;
+  document.getElementById("diff-correct").innerHTML=cH;
+  let[cp,cb,ct]=parseUrl(correct);
+  let[up,ub,ut]=parseUrl(user.length?user:"http://x.x");
+  document.getElementById("section-breakdown").innerHTML=[
+    {label:"PROTOCOL",correct:cp,yours:up,ok:up===cp},
+    {label:"DOMAIN",  correct:cb,yours:ub,ok:ub===cb},
+    {label:"TLD",     correct:ct,yours:ut,ok:ut===ct},
+  ].map(s=>`
+    <div class="sb-item ${s.ok?"ok":"err"}">
+      <div class="sb-icon">${s.ok?"✅":"❌"}</div>
+      <div class="sb-label">${s.label}</div>
+      <div class="sb-val">${s.ok?s.correct:s.yours+" → "+s.correct}</div>
+    </div>`).join('');
+  document.getElementById("diff-box").classList.add("on");
+}
+function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+// ══════════════════════════════════════════════════════
+//  FACTS & TIPS
+// ══════════════════════════════════════════════════════
+const FACTS=[
+  "HTTPS encrypts data in transit — always check for the padlock before logging in.",
+  "Phishers register near-identical domains like 'paypa1.com' — read every character carefully.",
+  "The real domain is always just before the last dot: in 'secure.evil.com', evil.com is the real domain.",
+  "'secure.' or 'login.' in a subdomain doesn't make it safe — it's a classic phishing trick.",
+  "Hover over links to see the real destination URL before clicking anything.",
+  "Unicode lookalike characters (е vs e, 0 vs o) make fake URLs nearly invisible to the eye.",
+  "Attackers clone .com sites as .net/.org/.live — always verify the full TLD character by character.",
+  "crt.sh shows all SSL certificates issued for a domain — useful to spot fake lookalike sites.",
+  "Homograph attacks use foreign language characters that look identical to Latin letters.",
+  "Even one wrong character in a URL can redirect you to a phishing page stealing your credentials.",
+  "Check the URL bar AFTER a page loads — some redirects take you to a different domain.",
+  "3.4 billion phishing emails are sent every single day — URL awareness is your first defence.",
+];
+function securityFact(){ return FACTS[factIndex++%FACTS.length]; }
+function makeTip(user,correct){
+  if(!user) return "Nothing submitted — click the ingredients to build the URL first.";
+  if(user.startsWith("http://")&&correct.startsWith("https://"))
+    return "🔒 HTTP ≠ HTTPS — plain HTTP sends all your data unencrypted. The 's' matters!";
+  if(/[0-9]/.test(user.replace(/^https?:\/\//,"").replace(/\.\w{2,10}$/,"")))
+    return "👁 Number swap detected! Phishers use 0→o, 1→i/l, 3→e, 4→a. Read every character.";
+  if(/^(secure|login|verify|account|support|update|portal|auth|api)\./.test(user.replace(/^https?:\/\//,"")))
+    return "⚠ Subdomain trap! 'secure.evil.com' is NOT secure.com — real domain = text before last dot.";
+  if([".net",".live",".xyz",".store"].some(t=>user.endsWith(t)&&!correct.endsWith(t)))
+    return "🌐 Wrong TLD! Phishers use .net/.live/.xyz to clone .com/.gov sites. Check the ending!";
+  return `🎯 Correct was: ${correct} — phishing URLs differ by just one character. Train your eye!`;
+}
+
+// ══════════════════════════════════════════════════════
+//  HINT
+// ══════════════════════════════════════════════════════
+function useHint(){
+  if(hints<=0) return;
+  hints--;
+  let txt="→ "+parseUrl(correctUrl).join("  +  ");
+  let el=document.getElementById("hint-txt"); if(el){el.textContent=txt;el.classList.add("on");}
+  let hc=document.getElementById("hint-count"); if(hc) hc.textContent=hints;
+  if(hints<=0) document.getElementById("hint-btn").disabled=true;
+}
+function hideHint(){
+  let hel=document.getElementById("hint-txt"); if(hel){hel.classList.remove("on");hel.textContent="";}
+}
+
+// ══════════════════════════════════════════════════════
+//  FEEDBACK
+// ══════════════════════════════════════════════════════
+function showFeedback(ok,title,tip,correctAns){
+  let p=document.getElementById("k-feedback");
+  p.className="feedback "+(ok?"ok":"bad");
+  let ft=document.getElementById("k-fb-title");
+  ft.style.color=ok?"var(--green)":"var(--red)"; ft.textContent=title;
+  document.getElementById("k-fb-tip").textContent=tip;
+  document.getElementById("k-fb-correct").textContent=correctAns||"";
+}
+function hideFeedback(){
+  let el=document.getElementById("k-feedback"); if(el) el.className="feedback";
+}
+
+// ══════════════════════════════════════════════════════
+//  COMBO
+// ══════════════════════════════════════════════════════
+function showCombo(txt){
+  let el=document.getElementById("combo");
+  el.textContent=txt; el.classList.remove("combo-pop"); void el.offsetWidth; el.classList.add("combo-pop");
+}
+
+// ══════════════════════════════════════════════════════
+//  STATS & LEVEL
+// ══════════════════════════════════════════════════════
+function refreshStats(){
+  document.getElementById("s-score").textContent=score;
+  document.getElementById("s-streak").textContent=streak;
+  document.getElementById("s-lives").textContent=livesHtml();
+  document.getElementById("s-level").textContent=level;
+  let ss=document.getElementById("s-streak");
+  ss.className=streak>=5?"stat-val g":streak>=3?"stat-val o":"stat-val";
+  let sl=document.getElementById("s-level");
+  sl.className=level>=6?"stat-val p":level>=5?"stat-val r":level>=4?"stat-val o":"stat-val g";
+}
+function checkLevelUp(){
+  let c=cfg(); refreshStats(); updateXpBar();
+  if(level<6&&levelCorrect>=c.correctNeeded){
+    levelCorrect=0; level++; maxLevelReached=Math.max(maxLevelReached,level);
+    levelQueues={};  // clear queues on level up so new level starts fresh
+    updateBadge(); sfxLevelUp();
+    let banner=document.getElementById("lvlup");
+    banner.textContent=`[ LEVEL ${level} — ${cfg().name} ]`;
+    banner.classList.add("show"); setTimeout(()=>banner.classList.remove("show"),3000);
+    showCombo("🆙 LEVEL "+level+"!"); updateXpBar(); refreshStats();
+  }
+  let cn=cfg().correctNeeded;
+  document.getElementById("q-correct").textContent=`✓ ${levelCorrect}/${cn!==999?cn:"∞"} this level`;
+}
+function updateXpBar(){
+  let c=cfg(),n=c.correctNeeded,pct=n>=999?100:Math.min((levelCorrect/n)*100,100);
+  document.getElementById("xp-bar").style.width=pct+"%";
+  document.getElementById("xp-txt").textContent=n>=999?`${levelCorrect} correct — MAX LEVEL ☠`:`${levelCorrect} / ${n} correct to advance`;
+}
+function updateBadge(){
+  let c=cfg(),b=document.getElementById("lvl-badge");
+  b.className="lvl-badge "+c.cls;
+  b.textContent=`[ LEVEL ${level} — ${c.name} ]`;
+  b.classList.remove("glitch-anim","nightmare-anim");
+  if(level===5) b.classList.add("glitch-anim");
+  if(level===6) b.classList.add("nightmare-anim");
+}
+function getRating(acc,lv){
+  if(acc>=95&&lv>=6) return{txt:"☠ UNBREAKABLE",color:"#cc44ff"};
+  if(acc>=90&&lv>=5) return{txt:"💀 ELITE HACKER",color:"var(--red)"};
+  if(acc>=80&&lv>=4) return{txt:"🔥 SECURITY PRO",color:"var(--orange)"};
+  if(acc>=70&&lv>=3) return{txt:"⚡ ANALYST",color:"var(--yellow)"};
+  if(acc>=60&&lv>=2) return{txt:"🔍 ROOKIE",color:"var(--cyan)"};
+  return{txt:"🆕 TRAINEE",color:"var(--green)"};
+}
+
+// ══════════════════════════════════════════════════════
+//  DAILY
+// ══════════════════════════════════════════════════════
+function startDailyChallenge(){
+  document.getElementById("overlay").classList.remove("on");
+  dailyMode=true; dailyOrders=getDailyOrders(); dailyIndex=0;
+  score=0;level=1;streak=0;bestStreak=0;maxCombo=0;
+  lives=3;hints=3;builtUrl=[];totalQ=0;correctQ=0;levelCorrect=0;maxLevelReached=1;
+  totalTimeUsed=0;totalAnswered=0;factIndex=0;wrongAnswers=[];serving=false;levelQueues={};
+  document.getElementById("daily-bar").classList.add("on");
+  document.getElementById("daily-tag").style.display="inline";
+  let hci=document.getElementById("hint-count"); if(hci) hci.textContent="3";
+  let hbi=document.getElementById("hint-btn"); if(hbi) hbi.disabled=false;
+  refreshStats(); updateBadge(); updateXpBar(); loadQ();
+}
+function exitDaily(){
+  dailyMode=false;
+  document.getElementById("daily-bar").classList.remove("on");
+  document.getElementById("daily-tag").style.display="none";
+  restartGame();
+}
+
+// ══════════════════════════════════════════════════════
+//  END GAME
+// ══════════════════════════════════════════════════════
+function endGame(){
+  clearInterval(timer);
+  dailyMode=false;
+  document.getElementById("daily-bar").classList.remove("on");
+  document.getElementById("daily-tag").style.display="none";
+  let acc=totalQ>0?Math.round(correctQ/totalQ*100):0;
+  let avg=totalAnswered>0?Math.round(totalTimeUsed/totalAnswered):0;
+  let rating=getRating(acc,maxLevelReached);
+  addToLB({score,level:maxLevelReached,acc:acc+"%",
+    mode:"🎮 Unified",
+    date:new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short'})});
+  document.getElementById("ov-title").textContent="GAME OVER";
+  document.getElementById("ov-title").className="ov-title red";
+  document.getElementById("ov-sub").textContent="ALL LIVES LOST — SYSTEM BREACHED";
+  document.getElementById("ov-score").textContent=score;
+  document.getElementById("ov-q").textContent=totalQ;
+  document.getElementById("ov-acc").textContent=acc+"%";
+  document.getElementById("ov-best").textContent=bestStreak;
+  document.getElementById("ov-lv").textContent=maxLevelReached;
+  document.getElementById("ov-time").textContent=avg+"s";
+  document.getElementById("ov-combo").textContent=maxCombo;
+  let r=document.getElementById("ov-rating"); r.textContent=rating.txt; r.style.color=rating.color;
+  renderLB(score);
+  let wl=document.getElementById("wrong-list"),wt=document.getElementById("wr-title");
+  wt.style.display="block";
+  wl.innerHTML=wrongAnswers.length>0
+    ? wrongAnswers.map(w=>`
+        <div class="wrong-item">
+          <div class="wi-q">📋 ${w.q}</div>
+          <div class="wi-yours">✗ You:     ${w.yours}</div>
+          <div class="wi-correct">✓ Correct: ${w.correct}</div>
+          <div class="wi-tip">${w.tip}</div>
+        </div>`).join('')
+    : '<div style="font-size:14px;color:var(--green);text-align:center;padding:8px;font-weight:600;">🎉 Perfect run — No mistakes!</div>';
+  document.getElementById("overlay").classList.add("on");
+  document.getElementById("overlay").scrollTop=0;
+}
+
+// ══════════════════════════════════════════════════════
+//  RESTART
+// ══════════════════════════════════════════════════════
+function restartGame(){
+  score=0;level=1;streak=0;bestStreak=0;maxCombo=0;
+  lives=3;hints=3;builtUrl=[];totalQ=0;correctQ=0;levelCorrect=0;maxLevelReached=1;
+  totalTimeUsed=0;totalAnswered=0;serving=false;factIndex=0;
+  wrongAnswers=[];dailyMode=false;dailyIndex=0;levelQueues={};
+  document.getElementById("overlay").classList.remove("on");
+  document.getElementById("daily-bar").classList.remove("on");
+  document.getElementById("daily-tag").style.display="none";
+  let hci=document.getElementById("hint-count"); if(hci) hci.textContent="3";
+  let hbi=document.getElementById("hint-btn"); if(hbi) hbi.disabled=false;
+  refreshStats(); updateBadge(); updateXpBar(); loadQ();
+}
+function goHome(){
+  window.location.href = "/";
+}
+// ══════════════════════════════════════════════════════
+//  BOOT
+// ══════════════════════════════════════════════════════
+refreshStats(); updateBadge(); updateXpBar(); loadQ();
+</script>
+</body>
+</html>
